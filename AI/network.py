@@ -104,6 +104,7 @@ def nnet(board_size, model_file=None):
         optimizer = tf.train.AdamOptimizer(
                 learning_rate=learning_rate).minimize(loss)
     
-    return loss, optimizer
+    __init_variables__()
+    
         
 
