@@ -133,7 +133,7 @@ class GameParty():
         self.new_step()
         
         
-    def __won(self):
+    def __won(self): #check if game is won or not
         for idx in range(self.__Table_size__[0]):
             for jdx in range(self.__Table_size__[1]):
                 if(any([self.__check_win_rule_1([idx,jdx]),
