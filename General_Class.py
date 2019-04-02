@@ -129,24 +129,24 @@ class GameParty():
         
         #refresh
         self.__refresh_player__()
-        self.__won__()
+        self.__won()
         self.new_step()
         
         
-    def __won__(self):
+    def __won(self):
         for idx in range(self.__Table_size__[0]):
             for jdx in range(self.__Table_size__[1]):
-                if(any([self.__check_win_rule_1__([idx,jdx]),
-                        self.__check_win_rule_2__([idx,jdx]),
-                        self.__check_win_rule_3__([idx,jdx]),
-                        self.__check_win_rule_4__([idx,jdx])])):
+                if(any([self.__check_win_rule_1([idx,jdx]),
+                        self.__check_win_rule_2([idx,jdx]),
+                        self.__check_win_rule_3([idx,jdx]),
+                        self.__check_win_rule_4([idx,jdx])])):
                     if(self.Table.TABLE[idx,jdx] == self.Players[0].sig):
                         self.WINNER = self.Players[0]
                     else:
                         self.WINNER = self.Players[1]
                     self.__del__()
                 
-    def __check_win_rule_1__(self, coordinates):
+    def __check_win_rule_1(self, coordinates):
         '''
         5 in 1 row
         '''
@@ -163,7 +163,7 @@ class GameParty():
             else:
                 return 0
         
-    def __check_win_rule_2__(self, coordinates):
+    def __check_win_rule_2(self, coordinates):
         '''
         5 in diagonal,  left->right
                         top->bottom
@@ -183,7 +183,7 @@ class GameParty():
             else:
                 return 0
             
-    def __check_win_rule_3__(self, coordinates):
+    def __check_win_rule_3(self, coordinates):
         '''
         5 in diagonal,  right->left
                         top->bottom
@@ -203,7 +203,7 @@ class GameParty():
             else:
                 return 0
         
-    def __check_win_rule_4__(self, coordinates):
+    def __check_win_rule_4(self, coordinates):
         '''
         5 in diagonal,  right->left
                         top->bottom
@@ -225,5 +225,5 @@ class GameParty():
 
 #%% Example
 
-Party = GameParty(Table_size = 11)
+Party = GameParty()
 Party.start_game()
