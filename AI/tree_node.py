@@ -3,6 +3,7 @@
 Created on Tue Apr 9 10:55:37 2019
 @author: KemyPeti
 """
+import numpy as np
 
 class tree_node():
   
@@ -54,7 +55,7 @@ class tree_node():
         """
         for action, prob in action_priors:
             if(action not in self.children):
-                self.children[action] = TreeNode(self, prob)
+                self.children[action] = tree_node(self, prob)
                 
     def EXPLORE(self, leaf_value):
         """
