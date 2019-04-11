@@ -117,3 +117,19 @@ class NeuralNetwork():
 
     def restore_model(self, model_path):
         self.saver.restore(self.session, model_path)
+        
+        
+    '''
+    def policy_value_fn(self, Party):
+        """
+        input: board
+        output: a list of (action, probability) tuples for each available
+        action and the score of the board state
+        """
+        legal_positions = Party.possible_steps
+        current_state = np.ascontiguousarray(board.current_state().reshape(
+                -1, 4, self.board_width, self.board_height))
+        act_probs, value = self.policy_value(current_state)
+        act_probs = zip(legal_positions, act_probs[0][legal_positions])
+        return act_probs, value
+    '''

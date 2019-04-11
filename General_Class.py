@@ -50,6 +50,7 @@ class GameParty():
         self.__Table_size__ = [Table_size, Table_size]
         self.Table = table(self.__Table_size__);
         self.Players = [Player('P1', Colors.X), Player('P2', Colors.O)]; # 'X' starts
+        self.num_in_row = 5;
         
         #creates an array with the availabl coordinates on the table
         self.possible_steps = np.array(np.meshgrid(np.arange(0,self.__Table_size__[0]), np.arange(0,self.__Table_size__[1]))).T.reshape(-1,2)
@@ -222,8 +223,3 @@ class GameParty():
             else:
                 return 0
           
-
-#%% Example
-
-Party = GameParty()
-Party.start_game()

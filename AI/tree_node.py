@@ -40,7 +40,7 @@ class tree_node():
         highest possibility of winning.
         """
         return max(self.children.items(),
-                   key=lambda child: child[1].get_value(c_puct))
+                   key=lambda child: child[1].get_value(c_puct)) # returns an action and a node
       
       
     def EXPAND(self, action_priors):
@@ -70,4 +70,4 @@ class tree_node():
         if self.parent:
             self.parent.UPDATE(-leaf_value)
         self.EXPLORE(leaf_value)
-      
+     
