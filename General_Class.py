@@ -6,6 +6,9 @@ Created on Tue Mar 19 10:23:27 2019
 
 import numpy as np
 
+from table import table
+
+
 #%%
 from enum import Enum, unique
 @unique
@@ -18,31 +21,8 @@ class Status(Enum): # enum for status
     in_process = 1
     after_finish = 2
     
-#%%
-class Player():
-    def __init__(self, name, color):
-        self.name = name
-        
-        self.color = color
-        if(color == Colors.X):
-            self.sig = 1
-        elif(color == Colors.O):
-            self.sig = -1
-        else:
-            raise Exception('Incorrect color!')
-        
-#%%
 
-class table():
-    def __init__(self, table_size, NumCharsInRow = 5):
-        if(table_size[0] < NumCharsInRow or table_size[1] < NumCharsInRow):
-            raise Exception("Table with shape {0} is less than the minimum, NumCharsInRow: {1} !".format(table_size, NumCharsInRow))
-            
-        self.TABLE = np.zeros((table_size))
-        self.height = self.TABLE.shape[0]
-        self.width = self.TABLE.shape[1]
-        self.chars_in_row = NumCharsInRow
-        
+
 #%%
 
 class GameParty():
@@ -141,7 +121,7 @@ class GameParty():
                         self.__check_win_rule_2([idx,jdx]),
                         self.__check_win_rule_3([idx,jdx]),
                         self.__check_win_rule_4([idx,jdx])])):
-                    if(self.Table.TABLE[idx,jdx] == self.Players[0].sig):
+                    if(self.Table.TABLE[idx,jdx] == self.Players[0].sig): #megy ez jobban is
                         self.WINNER = self.Players[0]
                     else:
                         self.WINNER = self.Players[1]
@@ -179,7 +159,7 @@ class GameParty():
                self.Table.TABLE[coordinates[0]+2,coordinates[1]+2] ==
                self.Table.TABLE[coordinates[0]+3,coordinates[1]+3] ==
                self.Table.TABLE[coordinates[0]+4,coordinates[1]+4] and
-               self.Table.TABLE[coordinates[0],coordinates[1]] != 0 ):
+               self.Table.TABLE[coordinates[0],coordinates[1]] != 0 ): 
                 return 1
             else:
                 return 0
