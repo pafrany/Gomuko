@@ -160,19 +160,15 @@ class Game(object):
             player_in_turn = players[current_player]
             
             
-            if(player_in_turn.player == player2):#robot
+            if(player_in_turn.player == player2):#robot step
                 move = player_in_turn.set_action(self.board)
-                print(player_in_turn)
-                print(move)
                 pos = GU.position.IDX_to_position(self.board.width, self.board.height, move)
                 b[pos[0]][pos[1]].configure(text='O', fg='blue', bg='white')
-            else:
+            else:#human step
                 move = -1
                 while(move == -1):
                     b[r][c].configure(text='X', fg='red', bg='white')
                     move = player_in_turn.set_action(self.board, [r,c])
-                    print(player_in_turn)
-                    print(move)
                     if (move == -1 or move not in self.board.availables):
                         print("invalid move")
                         move = -1
@@ -203,7 +199,6 @@ class Game(object):
                 b[i][j] = tkinter.Button(font=('Arial', 20), width=4, bg='powder blue',
                                  command=lambda r=i, c=j: callback(r, c))
                 b[i][j].grid(row=i, column=j)
-        player='X'
         tkinter.mainloop()
         
 
