@@ -14,12 +14,13 @@ sys.path.append(os.getcwd() + '\\utils\\')
 import numpy as np
 from tkinter import *
 
-
+BOARD_SIZE=15
+marks={1:'X', 2:'O'}
 class Board(object):
 
     def __init__(self,
-                 width=15,
-                 height=15,
+                 width=BOARD_SIZE,
+                 height=BOARD_SIZE,
                  n_in_row=5,
                  start_player=0):
         '''
@@ -157,7 +158,6 @@ class Game(object):
 
         def callback(r, c):
             global player
-
             current_player = self.board.get_current_player()
             player_in_turn = players[current_player]
 
@@ -259,17 +259,14 @@ def close_window():
 def textchanger():
     global szam
 
-    szam += 1
+    szam = (szam + 1) % 3
 
     if szam == 1:
         text = "1 vs 1"
     if szam == 2:
         text = "1 vs cpu"
-    if szam == 3:
+    if szam == 0:
         text = "2 player"
-    if szam > 3:
-        szam = 1
-        textchanger()
     # btn['text'] = text
     b.config(text=text)
 
@@ -278,19 +275,16 @@ def jatek():
     window = Toplevel(root)
     def callback(r, c):
         global player
+        print(r)
+        print(c)
+        if states[r][c] == 0 and stop_game == False:
+            b[r][c].configure(text=marks[player], fg=['red', 'blue'][player-1], bg='white')
+            states[r][c] = player
+            player = (player % 2) +1
+            print(player)
+        check_for_winner(r, c)
 
-        if player == 'X' and states[r][c] == 0 and stop_game == False:
-            b[r][c].configure(text='X', fg='red', bg='white')
-            states[r][c] = 'X'
-            player = 'O'
-
-        if player == 'O' and states[r][c] == 0 and stop_game == False:
-            b[r][c].configure(text='O', fg='blue', bg='white')
-            states[r][c] = 'O'
-            player = 'X'
-        check_for_winner()
-
-    def check_for_winner():
+    def check_for_winner(r, c):
         global stop_game
         for i2 in range(15):
             for j2 in range(11):
@@ -323,46 +317,16 @@ def jatek():
                         b[i2 + h][j2 - h].config(bg='grey')
                     stop_game = True
 
-    b = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
-    states = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+    states = [[0 for i in range(BOARD_SIZE)] for j in range(BOARD_SIZE)]
+    b = [[0 for i in range(BOARD_SIZE)] for j in range(BOARD_SIZE)]
 
-    for i in range(15):
-        for j in range(15):
+    for i in range(BOARD_SIZE):
+        for j in range(BOARD_SIZE):
             b[i][j] = Button(window, font=('Arial', 20), width=4, bg='powder blue',
                              command=lambda r=i, c=j: callback(r, c))
             b[i][j].grid(row=i, column=j)
-    player = 'X'
+    player = 1
     stop_game = False
 
 
@@ -387,5 +351,5 @@ a = Button(root, text="START", width=7, command=indito)
 a.grid(row=2, column=5)
 b = Button(root, text="2 player", width=7, command=textchanger)
 b.grid(row=3, column=5)
-player = 'X'
+player = 1
 root.mainloop()
