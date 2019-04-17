@@ -6,19 +6,21 @@
 from __future__ import print_function
 import sys
 import os
+import tkinter
+
 sys.path.append(os.getcwd() + '\\utils\\')
 
-import game_utils as GU
+# import game_utils as GU
 import numpy as np
+from tkinter import *
 
-import tkinter
 
 class Board(object):
 
     def __init__(self,
-                 width = 15,
-                 height = 15,
-                 n_in_row = 5,
+                 width=15,
+                 height=15,
+                 n_in_row=5,
                  start_player=0):
         '''
         Variables:
@@ -40,32 +42,32 @@ class Board(object):
             \n\t * game_end: run has_a_winner
             \n\t * get_current_player: returns with the current player 
         '''
-        
+
         if width < n_in_row or height < n_in_row:
             raise Exception('Width and height should be greater than the "n_in_row"')
-            
+
         self.width = width
         self.height = height
         self.n_in_row = n_in_row
-        
+
         self.states = {}
-        
+
         self.players = [1, 2]  # player1 and player2
 
     def init_board(self, start_player=0):
         self.availables = list(range(self.width * self.height))
         self.current_player = self.players[start_player]  # start player
         self.last_move = -1
-        
+
     def move_to_location(self, move):
-        return GU.position.IDX_to_position(height = self.height,
-                                           width = self.width,
-                                           IDX = move)
+        return GU.position.IDX_to_position(height=self.height,
+                                           width=self.width,
+                                           IDX=move)
 
     def location_to_move(self, location):
-        return GU.position.position_to_IDX(height = self.height,
-                                           width = self.width,
-                                           position = location)
+        return GU.position.position_to_IDX(height=self.height,
+                                           width=self.width,
+                                           position=location)
 
     def current_state(self):
         """return the board state from the perspective of the current player.
@@ -104,7 +106,7 @@ class Board(object):
         n = self.n_in_row
 
         moved = list(set(range(width * height)) - set(self.availables))
-        if len(moved) < self.n_in_row *2-1:
+        if len(moved) < self.n_in_row * 2 - 1:
             return False, -1
 
         for m in moved:
@@ -152,27 +154,26 @@ class Game(object):
     def graphic(self, board, player1, player2, players, p1, p2):
         root = tkinter.Tk()
         root.title("Gomoku game")
-        
-        def callback(r,c):
+
+        def callback(r, c):
             global player
-        
+
             current_player = self.board.get_current_player()
             player_in_turn = players[current_player]
-            
-            
-            if(player_in_turn.player == player2):#robot step
+
+            if (player_in_turn.player == player2):  # robot step
                 move = player_in_turn.set_action(self.board)
                 pos = GU.position.IDX_to_position(self.board.width, self.board.height, move)
                 b[pos[0]][pos[1]].configure(text='O', fg='blue', bg='white')
-            else:#human step
+            else:  # human step
                 move = -1
-                while(move == -1):
+                while (move == -1):
                     b[r][c].configure(text='X', fg='red', bg='white')
-                    move = player_in_turn.set_action(self.board, [r,c])
+                    move = player_in_turn.set_action(self.board, [r, c])
                     if (move == -1 or move not in self.board.availables):
                         print("invalid move")
                         move = -1
-                
+
             self.board.do_move(move)
             end, winner = self.board.game_end()
             if end:
@@ -181,8 +182,7 @@ class Game(object):
                 else:
                     print("Game end. Tie")
                 return winner
-                
-        
+
         def generate_list_table(N):
             out = []
             for idx in range(N):
@@ -191,16 +191,15 @@ class Game(object):
                     tmp.append(0)
                 out.append(tmp)
             return out
-        
+
         N = self.board.width
         b = generate_list_table(N)
         for i in range(N):
             for j in range(N):
                 b[i][j] = tkinter.Button(font=('Arial', 20), width=4, bg='powder blue',
-                                 command=lambda r=i, c=j: callback(r, c))
+                                         command=lambda r=i, c=j: callback(r, c))
                 b[i][j].grid(row=i, column=j)
         tkinter.mainloop()
-        
 
     def start_play(self, player1, player2, start_player=0, is_shown=1):
         """start a game between two players"""
@@ -213,7 +212,7 @@ class Game(object):
         player2.set_player_ind(p2)
         players = {p1: player1, p2: player2}
         if is_shown:
-            self.graphic(self.board, player1.player, player2.player, players, p1,p2)
+            self.graphic(self.board, player1.player, player2.player, players, p1, p2)
 
     def start_self_play(self, player, is_shown=0, temp=1e-3):
         """ start a self-play game using a MCTS player, reuse the search tree,
@@ -249,3 +248,144 @@ class Game(object):
                     else:
                         print("Game end. Tie")
                 return winner, zip(states, mcts_probs, winners_z)
+
+
+def close_window():
+    root.destroy()
+    exit()
+
+
+# def click():
+def textchanger():
+    global szam
+
+    szam += 1
+
+    if szam == 1:
+        text = "1 vs 1"
+    if szam == 2:
+        text = "1 vs cpu"
+    if szam == 3:
+        text = "2 player"
+    if szam > 3:
+        szam = 1
+        textchanger()
+    # btn['text'] = text
+    b.config(text=text)
+
+
+def jatek():
+    window = Toplevel(root)
+    def callback(r, c):
+        global player
+
+        if player == 'X' and states[r][c] == 0 and stop_game == False:
+            b[r][c].configure(text='X', fg='red', bg='white')
+            states[r][c] = 'X'
+            player = 'O'
+
+        if player == 'O' and states[r][c] == 0 and stop_game == False:
+            b[r][c].configure(text='O', fg='blue', bg='white')
+            states[r][c] = 'O'
+            player = 'X'
+        check_for_winner()
+
+    def check_for_winner():
+        global stop_game
+        for i2 in range(15):
+            for j2 in range(11):
+                if states[i2][j2] == states[i2][j2 + 1] == states[i2][j2 + 2] == states[i2][j2 + 3] == states[i2][
+                    j2 + 4] != 0:
+                    for h in range(5):
+                        b[i2][j2 + h].config(bg='grey')
+                    stop_game = True
+        for i2 in range(11):
+            for j2 in range(15):
+                if states[i2][j2] == states[i2 + 1][j2] == states[i2 + 2][j2] == states[i2 + 3][j2] == states[i2 + 4][
+                    j2] != 0:
+                    for h in range(5):
+                        b[i2 + h][j2].config(bg='grey')
+                    stop_game = True
+        for i2 in range(11):
+            for j2 in range(11):
+                if states[i2][j2] == states[i2 + 1][j2 + 1] == states[i2 + 2][j2 + 2] == states[i2 + 3][j2 + 3] == \
+                        states[i2 + 4][j2 + 4] \
+                        != 0:
+                    for h in range(5):
+                        b[i2 + h][j2 + h].config(bg='grey')
+                    stop_game = True
+        for i2 in range(15):
+            for j2 in range(15):
+                if states[i2][j2] == states[i2 + 1][j2 - 1] == states[i2 + 2][j2 - 2] == states[i2 + 3][j2 - 3] == \
+                        states[i2 + 4][j2 - 4] \
+                        != 0:
+                    for h in range(5):
+                        b[i2 + h][j2 - h].config(bg='grey')
+                    stop_game = True
+
+    b = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+    states = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+
+    for i in range(15):
+        for j in range(15):
+            b[i][j] = Button(window, font=('Arial', 20), width=4, bg='powder blue',
+                             command=lambda r=i, c=j: callback(r, c))
+            b[i][j].grid(row=i, column=j)
+    player = 'X'
+    stop_game = False
+
+
+
+
+def indito():
+    # if szam ==1: # Andris vmilyét hívja meg
+
+    # if szam == 2:
+    # start_play()
+    if szam == 3 or szam == 0:
+        jatek()
+
+
+szam = 0
+root = Tk()
+root.title("Gomoku game")
+
+photo1 = PhotoImage(file="gom.gif")
+Label(root, image=photo1).grid(row=0, column=5)
+a = Button(root, text="START", width=7, command=indito)
+a.grid(row=2, column=5)
+b = Button(root, text="2 player", width=7, command=textchanger)
+b.grid(row=3, column=5)
+player = 'X'
+root.mainloop()
