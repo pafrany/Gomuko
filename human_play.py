@@ -51,9 +51,7 @@ def run(width = 8,
         model_file = 'best_policy_8_8_5.model'):
     
     try:
-        board = Board(width=width,
-                      height=height,
-                      n_in_row=num_in_row)
+        board = Board(n_in_row=num_in_row)
         
         game = Game(board)
         
