@@ -23,7 +23,7 @@ class MainMenu:
 		if self.mode == 2:
 			text = "1 vs cpu"
 		if self.mode == 0:
-			text = "2 player"
+			text = "Online 2 player"
 		self.b.config(text=text)
 	def indito(self):
 		window=Toplevel(self.root)

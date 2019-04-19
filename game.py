@@ -7,6 +7,7 @@ from __future__ import print_function
 import sys
 import os
 import tkinter
+from AI import AI
 
 sys.path.append(os.getcwd() + '\\utils\\')
 
@@ -65,8 +66,34 @@ class Game(object):
         self.window=window
         self.states=[[0 for i in range(BOARD_SIZE)] for j in range(BOARD_SIZE)]
         self.board=self.Board(self, mode)
-        if mode==1:
+        if mode==1: #1v1
         	self.callback=self.callback_1v1
+        if mode==2: #AI
+            self.callback=self.callback_AI
+            self.AI=AI()
+    def callback_AI(self, r, c):
+        if self.states[r][c] != 0 or self.stop_game:
+            return
+        self.AI.capture_location((r, c))
+        self.board.step(r, c, self.player)
+        self.states[r][c] = self.player
+        self.player = (self.player % 2) +1
+        dir, self.stop_game=self.check_for_winner(r, c)
+        if self.stop_game:
+            self.board.draw_win(r, c, dir)
+            return
+        step=self.AI.get_AI_move(self.states)
+        r, c=step[0], step[1]
+        if self.states[r][c] != 0 or self.stop_game:
+            return
+        self.AI.capture_location((r, c))
+        self.board.step(r, c, self.player)
+        self.states[r][c] = self.player
+        self.player = (self.player % 2) +1
+        dir, self.stop_game=self.check_for_winner(r, c)
+        if self.stop_game:
+            self.board.draw_win(r, c, dir)
+            return
     def callback_1v1(self, r, c):
         if self.states[r][c] != 0 or self.stop_game:
             return
@@ -76,8 +103,6 @@ class Game(object):
         dir, self.stop_game=self.check_for_winner(r, c)
         if self.stop_game:
             self.board.draw_win(r, c, dir)
-    def callback_vscomp(self, r, c):
-    	print('blee')
     def start_play(self):
         self.stop_game=False
     def check_for_winner(self, r, c):

@@ -1,22 +1,19 @@
-from game import *
-from mcts_alphaZero import MCTSPlayer
-from policy_value_net_play import PolicyValueNetPlay
+import game
+#from mcts_alphaZero import MCTSPlayer
+#from policy_value_net_play import PolicyValueNetPlay
 from random import randint
+import utils.game_utils as GU
 
 
 class AI:
 	def __init__(self):
-		self.availables = list(range(self.width * self.height))
+		self.availables = list(range(game.BOARD_SIZE * game.BOARD_SIZE))
 
 	def move_to_location(self, move):
-        return GU.position.IDX_to_position(height=game.BOARD_SIZE,
-                                           width=game.BOARD_SIZE,
-                                           IDX=move)
+		return GU.position.IDX_to_position(height=game.BOARD_SIZE, width=game.BOARD_SIZE, IDX=move)
 
-    def location_to_move(self, location):
-        return GU.position.position_to_IDX(height=game.BOARD_SIZE,
-                                           width=game.BOARD_SIZE,
-                                           position=location)
+	def location_to_move(self, location):
+		return GU.position.position_to_IDX(height=game.BOARD_SIZE, width=game.BOARD_SIZE, position=location)
 	
 	def get_AI_move(self, states): 
 		while True:
