@@ -17,9 +17,10 @@ class AI:
 	
 	def get_AI_move(self, states): 
 		while True:
-			a=randint(0, 15)
-			b=randint(0, 15)
+			a=randint(0, 14)
+			b=randint(0, 14)
 			if states[a][b]==0:
+				
 				return (a, b)
 
 	def capture_location(self, location):
