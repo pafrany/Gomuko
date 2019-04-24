@@ -68,21 +68,23 @@ class MCTS(object):
         self._c_puct = c_puct
         self._n_playout = n_playout
 
-    def _playout(self, state):
+    def _playout(self, boardstate):
         node = self._root
         while(1):
             if node.is_leaf():
                 break
             
             action, node = node.select(self._c_puct)
-            state.do_move(action)
-
+            boardstate.states[action] = boardstate.current_player #current player
+            boardstate.availables.remove(action)
+            boardstate.current_player = (1 if boardstate.current_player == 2 else 2)
+            ##
         # Evaluate the leaf using a network which outputs a list of
         # (action, probability) tuples p and also a score v in [-1, 1]
         # for the current player.
-        action_probs, leaf_value = self._policy(availables, current_state)
+        action_probs, leaf_value = self._policy(boardstate.availables, boardstate.current_state())
         # Check for end of game.
-        end, winner = state.game_end()
+        end, winner = boardstate.game_end()
         if not end:
             node.expand(action_probs)
         else:
@@ -90,21 +92,19 @@ class MCTS(object):
             if winner == -1:  # tie
                 leaf_value = 0.0
             else:
-                leaf_value = (
-                    1.0 if winner == state.get_current_player() else -1.0
-                )
+                leaf_value = (1.0 if winner == boardstate.current_player() else -1.0)
 
         # Update value and visit count of nodes in this traversal.
         node.update_recursive(-leaf_value)
 
-    def get_move_probs(self, state, temp=1e-3):
+    def get_move_probs(self, boardstate, temp=1e-3):
         """Run all playouts sequentially and return the available actions and
         their corresponding probabilities.
         state: the current game state
         temp: temperature parameter in (0, 1] controls the level of exploration
         """
         for n in range(self._n_playout):
-            state_copy = copy.deepcopy(state)
+            state_copy = copy.deepcopy(boardstate)
             self._playout(state_copy)
 
         # calc the move probabilities based on visit counts at the root node
@@ -138,11 +138,11 @@ class MCTSPlayer(object):
     def reset_player(self):
         self.mcts.update_with_move(-1)
         
-    def set_action(self, board, size, location = 0, temp=1e-3, return_prob=0):
+    def set_action(self, boardstate, size, location = 0, temp=1e-3, return_prob=0):
         
         move_probs = np.zeros(size*size)
         
-        acts, probs = self.mcts.get_move_probs(board, temp)
+        acts, probs = self.mcts.get_move_probs(boardstate, temp)
         move_probs[list(acts)] = probs
         
         move = np.random.choice(acts, p=probs)

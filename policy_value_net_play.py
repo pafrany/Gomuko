@@ -12,7 +12,6 @@ import game_utils as GU
 import numpy as np
 import tensorflow as tf
 
-tf.enable_eager_execution()
 
 class PolicyValueNetPlay():
     
@@ -21,10 +20,10 @@ class PolicyValueNetPlay():
         self.height = board_height
         self.params = net_params
 
-    def policy_value_fn(self, board):
+    def policy_value_fn(self, availables, current_state):
         
-        AVAIL = board.availables
-        CURSTATE = board.current_state()
+        AVAIL = availables
+        CURSTATE = current_state
         
         X = CURSTATE.reshape(-1, 4, self.width, self.height)
         
@@ -40,7 +39,8 @@ class PolicyValueNetPlay():
         
         X_p = GU.math.conv2D(X = X,
                              W = self.params[6], 
-                             b = self.params[7])
+                             b = self.params[7],
+                             padding = 0)
         X_p = GU.math.dense(X = X_p.flatten(), 
                             W = self.params[8],
                             b = self.params[9])
@@ -48,11 +48,12 @@ class PolicyValueNetPlay():
         
         X_v = GU.math.conv2D(X = X,
                              W = self.params[10],
-                             b = self.params[11])
+                             b = self.params[11],
+                             padding = 0)
         
-        X_v = tf.nn.relu(GU.math.dense(X = X_v.flatten(),
+        X_v = GU.math.relu((GU.math.dense(X = X_v.flatten(),
                                          W = self.params[12],
-                                         b = self.params[13])).numpy()
+                                         b = self.params[13])))
         value = np.tanh(GU.math.dense(X = X_v, 
                                       W = self.params[14],
                                       b = self.params[15]))[0]
