@@ -6,9 +6,11 @@
 from __future__ import absolute_import, division, print_function
 import sys
 import os
-sys.path.append(os.getcwd() + '\\utils\\')
-
-import game_utils as GU
+try:
+    sys.path.append(os.getcwd() + '\\utils\\')
+    import game_utils as GU
+except:
+    import utils.game_utils as GU
 import numpy as np
 import tensorflow as tf
 

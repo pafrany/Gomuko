@@ -9,16 +9,17 @@ import os
 import tkinter as tk
 from tkinter import font  as tkfont
 from AI import AI
-
-sys.path.append(os.getcwd() + '\\utils\\')
-
-# import game_utils as GU
+import hashlib
 import numpy as np
 from tkinter import *
+from tkinter import messagebox
+import threading
+from threading import Thread
+from GUI import *
+from communicator import *
 
 BOARD_SIZE=15
-MARKS={1:'X', 2:'O'}
-COLORS={1: 'red', 2: 'blue'}
+
 
 
 class Game_offline(tk.Tk):
@@ -32,7 +33,6 @@ class Game_offline(tk.Tk):
         self.board=Board(self, self, mode)
         self.board.pack()
         self.board.tkraise()
-
         if mode==1: #1v1
         	self.callback=self.callback_1v1
         if mode==2: #AI
@@ -42,7 +42,7 @@ class Game_offline(tk.Tk):
     def callback_AI(self, r, c):
         if self.states[r][c] != 0 or self.stop_game:
             return
-        self.AI.capture_location((r, c))
+        self.AI.capture_location((r, c), 1)
         self.history.append([r, c])
         self.board.step(r, c, self.player)
         self.states[r][c] = self.player
@@ -51,12 +51,13 @@ class Game_offline(tk.Tk):
         if self.stop_game:
             self.board.draw_win(r, c, dir)
             return
-        step=self.AI.get_AI_move(self.states)
+        Tk.update_idletasks(self)
+        step=self.AI.get_AI_move()
         r, c=step[0], step[1]
         self.history.append([r, c])
         if self.states[r][c] != 0 or self.stop_game:
             return
-        self.AI.capture_location((r, c))
+        self.AI.capture_location((r, c), 2)
         self.board.step(r, c, self.player)
         self.states[r][c] = self.player
         self.player = (self.player % 2) +1
@@ -108,7 +109,21 @@ class Game_offline(tk.Tk):
 class Game_online(tk.Tk):
     def __init__(self):
         tk.Tk.__init__(self)
+        self.selfdata=None
+        self.playerdata=[]
+        self.plist=[]
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
+
+        
+        self.communicator=Communicator(self)
+        self.communicator.print('Ping\r\n')
+        threading.Thread(target=self.communicator.data_update_thread, args=[], daemon=True).start()
+        resp=self.communicator.read_line()
+        if resp!='Pong':
+            print('valami baj van')
+        else:
+            print('kapcsolat rendben')
+
 
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand=True)
@@ -133,121 +148,64 @@ class Game_online(tk.Tk):
         '''Show a frame for the given page name'''
         frame = self.frames[page_name]
         frame.tkraise()
+    
+    def login(self, usrnm, psswrd):
+        self.frames['Login'].del_error()
+        psswrd=hashlib.md5(psswrd.encode()).hexdigest()
+        self.communicator.lock.acquire()
+        self.communicator.print('login\r\n')
+        self.communicator.print(usrnm+'\r\n')
+        resp=self.communicator.read_line()
+        print(resp)
+        if resp=='nincs':
+            self.frames['Login'].usrnmfail.configure(text='There is no user with this name')
+            self.communicator.lock.release()
+            return
+        if resp=='marbent':
+            self.frames['Login'].usrnmfail.configure(text='User is already logged in')
+            self.communicator.lock.release()
+            return
+        self.communicator.print(psswrd+'\r\n')
+        resp=self.communicator.read_line()
+        print(resp)
+        if resp!='ok':
+            self.frames['Login'].psswrdfail.configure(text='Incorrect password')
+            self.communicator.lock.release()
+            return
+        self.communicator.threads_run=True
+        self.communicator.lock.release()
+        
+        self.show_frame('Room')
+
+    def reg(self, usrnm, psswrd, psswrd2):
+        self.frames['Register'].del_error()
+        if psswrd2!=psswrd:
+            self.frames['Register'].psswrd2fail.configure(text='The passwords do not agree')
+            return
+        psswrd=hashlib.md5(psswrd.encode()).hexdigest()
+        self.communicator.lock.acquire()
+        self.communicator.print('reg\r\n')
+        self.communicator.print(usrnm+'\r\n')
+        resp=self.communicator.read_line()
+        if resp!='ok':
+            self.frames['Register'].usrnmfail.configure(text='This username is already taken')
+            self.communicator.lock.release()
+            return
+        self.communicator.print(psswrd+'\r\n')
+        resp=self.communicator.read_line()
+        if resp!='ok':
+            #elvileg nem fordulhat elő. vége a világnak
+            self.communicator.lock.release()
+            return
+        messagebox.showinfo('Hurray', 'You registered successfully')
+        self.show_frame('Login')
+        self.communicator.lock.release()
+    def logout(self):
+        self.communicator.lock.acquire()
+        self.communicator.print('logout\r\n')
+        self.communicator.lock.release()
+        self.frames['Login'].delete_entry()
+        self.show_frame('Login')
 
 
-class Board(tk.Frame):
-    def __init__(self, parent, game, mode):
-        tk.Frame.__init__(self, parent, width=1000, height=700)
-        self.parent=parent
-        self.game=game
-        self.field_buttons = [[0 for i in range(BOARD_SIZE)] for j in range(BOARD_SIZE)]
-        self.other_buttons=[]
-        for i in range(BOARD_SIZE):
-            for j in range(BOARD_SIZE):
-                self.field_buttons[i][j] = Button(self, font=('Arial', 20), width='1', height='1', bg='powder blue',
-                         command=lambda r=i, c=j: self.game.callback(r, c))
-                #self.field_buttons[i][j].grid(row=i, column=j)
-                self.field_buttons[i][j].place(x=200+40*i, y=40+40*j)
-        if mode==2:
-            self.other_buttons.append(Button(self, font=('Arial', 20), width=4, text='Undo',
-                         command=lambda: self.game.undo()))
-            self.other_buttons[0].place(x=900, y=100)
-
-    def clear(self):
-        for i in range(BOARD_SIZE):
-            for j in range(BOARD_SIZE):
-                self.buttons[i][j].configure(text='', bg='powder blue', state='normal')
-    def step(self, r, c, player):
-        self.field_buttons[r][c].configure(text=MARKS[self.game.player], disabledforeground=COLORS[self.game.player], bg='white', state=DISABLED)
-    def undo(self, r, c):
-        self.field_buttons[r][c].configure(text='', disabledforeground=COLORS[self.game.player], bg='powder blue', state='normal')
-    def draw_win(self, r, c, dir):
-        self.field_buttons[r][c].configure(bg='red4')
-        i, j=r, c
-        while True:
-            i, j=i+dir[0], j+dir[1]
-            if any(x in set([i, j]) for x in [-1, BOARD_SIZE]):
-                break
-            if self.game.states[i][j]!=self.game.states[r][c]:
-                break
-            self.field_buttons[i][j].configure(bg='DarkOrange3')
-        i, j=r,c
-        while True:
-            i, j=i-dir[0], j-dir[1]
-            if any(x in set([i, j]) for x in [-1, BOARD_SIZE]):
-                break
-            if self.gamestates[i][j]!=self.game.states[r][c]:
-                break
-            self.field_buttons[i][j].configure(bg='DarkOrange3')
-
-class Login(tk.Frame):
-
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent, width=1000, height=700)
-        #self.controller = controller
-        usrnm=Entry(self, width=20)
-        usrnm.place(x=400, y=250)
-        psswrd=Entry(self, width=20)
-        psswrd.place(x=400, y=350)
-
-        button1 = tk.Button(self, text="Login",
-                            command=lambda: controller.show_frame("Room"))
-        button2 = tk.Button(self, text="Register",
-                            command=lambda: controller.show_frame("Register"))
-        button1.place(x=400, y=400)
-        button2.place(x=500, y=400)
-        label1=Label(self, text='Username')
-        label1.place(x=400, y=200)
-        label2=Label(self, text='Password')
-        label2.place(x=400, y=300)
-class Register(tk.Frame):
-
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        usrnm=Entry(self, width=20)
-        usrnm.place(x=400, y=250)
-        psswrd=Entry(self, width=20)
-        psswrd.place(x=400, y=350)
-        psswrd2=Entry(self, width=20)
-        psswrd2.place(x=400, y=450)
-        button1 = tk.Button(self, text="Cancel",
-                            command=lambda: controller.show_frame("Login"))
-        button2 = tk.Button(self, text="Create account",
-                            command=lambda: controller.show_frame("Login"))
-        button1.place(x=400, y=500)
-        button2.place(x=500, y=500)
-        label1=Label(self, text='Username')
-        label1.place(x=400, y=200)
-        label2=Label(self, text='Password')
-        label2.place(x=400, y=300)
-        label2=Label(self, text='Password one more time')
-        label2.place(x=400, y=400)
-
-
-class Room(tk.Frame):
-
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        #self.controller = controller
-        scrollview=Frame(self, width=20, height=10)
-        scrollview.place(x=10, y=200)
-        listNodes = Listbox(scrollview, font=("Helvetica", 12))
-        listNodes.grid(row=0, column=0)
-        for i in range(20):
-            listNodes.insert(END, str(i))
-        scrollbar = Scrollbar(scrollview, orient="vertical")
-        scrollbar.config(command=listNodes.yview)
-        scrollbar.grid(row=0, column=1)
-
-        listNodes.config(yscrollcommand=scrollbar.set)
-        button = tk.Button(self, text="Log out", width=1, height=1,
-                           command=lambda: controller.show_frame("Login"))
-        button.place(x=30, y=50)
-class Communicator(object):
-    def __init__(self, socket):
-        self.socket=socket
-    def print(self, message):
-        self.socket.send(message.encode())
-    def read_line(self):
-        return self.socket.makefile().readline()
 

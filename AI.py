@@ -107,7 +107,7 @@ class AI:
     def location_to_move(self, location):
         return GU.position.position_to_IDX(height=bsize, width=bsize, position=location)
 	
-    def get_AI_move(self, states):
+    def get_AI_move(self):
         
         move = self.mcts_player.set_action(self.BoardState, bsize)
         return self.move_to_location(move)
@@ -120,7 +120,7 @@ class AI:
     def free_location(self, location): #undo esetére
         IDX = self.location_to_move(location)
         self.BoardState.availables.append(IDX)
-        self.BoardState.availables=sorted(self.availables)
+        self.BoardState.availables=sorted(self.BoardState.availables)
         self.BoardState.states.pop(IDX);
 
 

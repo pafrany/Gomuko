@@ -11,9 +11,11 @@ import copy
 
 import sys
 import os
-sys.path.append(os.getcwd() + '\\utils\\')
-
-import game_utils as GU
+try:
+    sys.path.append(os.getcwd() + '\\utils\\')
+    import game_utils as GU
+except:
+    import utils.game_utils as GU GU
 
 class TreeNode(object):
     """A node in the MCTS tree.
