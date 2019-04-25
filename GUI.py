@@ -116,7 +116,7 @@ class Room(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
-        #self.controller = controller
+        #Játékosok listája
         self.p_scrollview=Frame(self, width=20, height=10)
         self.p_scrollview.place(x=10, y=200)
         self.p_listNodes = Listbox(self.p_scrollview, font=("Helvetica", 12))
@@ -126,7 +126,9 @@ class Room(Frame):
         self.p_scrollbar = Scrollbar(self.p_scrollview, orient="vertical")
         self.p_scrollbar.config(command=self.p_listNodes.yview)
         self.p_scrollbar.grid(row=0, column=1)
+        self.p_listNodes.bind('<Double-l>', controller.show_player)
 
+        #futó játékok listája, majd, esetleg, vagy nem
         self.p_listNodes.config(yscrollcommand=self.p_scrollbar.set)
         self.g_scrollview=Frame(self, width=20, height=10)
         self.g_scrollview.place(x=600, y=200)
@@ -137,8 +139,20 @@ class Room(Frame):
         self.g_scrollbar = Scrollbar(self.g_scrollview, orient="vertical")
         self.g_scrollbar.config(command=self.g_listNodes.yview)
         self.g_scrollbar.grid(row=0, column=1)
-
         self.g_listNodes.config(yscrollcommand=self.g_scrollbar.set)
+
+        #folyamatosan frissülő inforációmorzsák, tudod, afféle napló...
+        self.i_scrollview=Frame(self, width=20, height=10)
+        self.i_scrollview.place(x=10, y=400)
+        self.i_listNodes = Listbox(self.i_scrollview, font=("Helvetica", 12))
+        self.i_listNodes.grid(row=0, column=0)
+        self.i_listNodes.insert(END, 'Hello!')
+        self.i_scrollbar = Scrollbar(self.i_scrollview, orient="vertical")
+        self.i_scrollbar.config(command=self.i_listNodes.yview)
+        self.i_scrollbar.grid(row=0, column=1)
+        self.i_listNodes.config(yscrollcommand=self.g_scrollbar.set)
+
+
         button = Button(self, text="Log out", width=1, height=1,
                            command=lambda: controller.logout())
         button.place(x=30, y=50)
@@ -150,3 +164,32 @@ class Room(Frame):
         self.g_listNodes.delete(0, END)
         for i in range(len(list)):
             self.g_listNodes.insert(END, list[i])
+class Challenged(Toplevel):
+    def __init__(self, parent, communicator, who):
+        Toplevel.__init__(self, parent)
+        self.geometry('300x200')
+        self.message=Text(text=who+' has challenged you')
+        self.message.place(x=100, y=30)
+        self.decline=Button(self, text='Decline', command=communicator.decline)
+        self.decline.place(x=155, y=140)
+        self.accept=Button(self, text='Accept', command=communicator.accept)
+        self.accept.place(x=80, y=140)
+        self.protocol("WM_DELETE_WINDOW", communicator.decline)
+        self.withdraw()
+class ChallengeInProgress(Toplevel):
+    def __init__(self, parent, communicator, who):
+        Toplevel.__init__(self, parent)
+        self.geometry('300x200')
+        self.message=Text(text='the challenge of '+who+' is in progress')
+        self.message.place(x=100, y=30)
+        self.decline=Button(self, text='Decline', command=communicator.cancel)
+        self.decline.place(x=155, y=140)
+        self.protocol("WM_DELETE_WINDOW", communicator.cancel)
+        self.withdraw()
+class Player(Toplevel):
+    def __init__(self, parent, player, communicator):
+        Toplevel.__init__(self, parent)
+        self.blabla=Text(self, text=player['name']+'\r\nMatch played: '+player['played']+'\r\nMatch won: '+player['won']+'\r\nWin percentage: '+"%.2f" % float(player['won'])/float(player['played']), height=4)
+        self.blabla.place(x=20, y=20)
+        self.challenge=Button(self, text='Challenge', command=lambda: communicator.challenge(player))
+        self.challenge.place(x=50, y=200)

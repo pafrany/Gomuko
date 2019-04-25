@@ -25,7 +25,7 @@ BOARD_SIZE=15
 class Game_offline(tk.Tk):
 
     def __init__(self, mode): 
-        tk.Tk.__init__(self)    
+        tk.Tk.__init__(self)
         self.stop_game=False
         self.player=1
         self.mode=mode
@@ -116,8 +116,11 @@ class Game_online(tk.Tk):
 
         
         self.communicator=Communicator(self)
+        self.protocol("WM_DELETE_WINDOW", self.communicator.close)
         self.communicator.print('Ping\r\n')
-        threading.Thread(target=self.communicator.data_update_thread, args=[], daemon=True).start()
+        self.playerbox=None
+        self.challenged_popup=None
+        self.i_challenge_popup=None
         resp=self.communicator.read_line()
         if resp!='Pong':
             print('valami baj van')
@@ -148,7 +151,10 @@ class Game_online(tk.Tk):
         '''Show a frame for the given page name'''
         frame = self.frames[page_name]
         frame.tkraise()
+    def show_player(self):
+        sself.playerbox=Player(self, self.playerdata[self.frames['Room'].p_listNodes.curselection()[0]], self.communicator)
     
+
     def login(self, usrnm, psswrd):
         self.frames['Login'].del_error()
         psswrd=hashlib.md5(psswrd.encode()).hexdigest()
@@ -174,7 +180,8 @@ class Game_online(tk.Tk):
             return
         self.communicator.threads_run=True
         self.communicator.lock.release()
-        
+        threading.Thread(target=self.communicator.data_update_thread, args=[], daemon=True).start()
+        threading.Thread(target=self.communicator.challenge_watcher_thread, args=[], daemon=True).start()
         self.show_frame('Room')
 
     def reg(self, usrnm, psswrd, psswrd2):
@@ -201,6 +208,8 @@ class Game_online(tk.Tk):
         self.show_frame('Login')
         self.communicator.lock.release()
     def logout(self):
+        print(self.frames['Room'].p_listNodes.curselection())
+        self.playerbox=Player(self, self.playerdata[self.frames['Room'].p_listNodes.curselection()[0]], self.communicator)
         self.communicator.lock.acquire()
         self.communicator.print('logout\r\n')
         self.communicator.lock.release()
