@@ -126,7 +126,7 @@ class Room(Frame):
         self.p_scrollbar = Scrollbar(self.p_scrollview, orient="vertical")
         self.p_scrollbar.config(command=self.p_listNodes.yview)
         self.p_scrollbar.grid(row=0, column=1)
-        self.p_listNodes.bind('<Double-l>', controller.show_player)
+        self.p_listNodes.bind("<Double-Button-1>", controller.show_player)
 
         #futó játékok listája, majd, esetleg, vagy nem
         self.p_listNodes.config(yscrollcommand=self.p_scrollbar.set)
@@ -168,7 +168,7 @@ class Challenged(Toplevel):
     def __init__(self, parent, communicator, who):
         Toplevel.__init__(self, parent)
         self.geometry('300x200')
-        self.message=Text(text=who+' has challenged you')
+        self.message=Label(text=who+' has challenged you')
         self.message.place(x=100, y=30)
         self.decline=Button(self, text='Decline', command=communicator.decline)
         self.decline.place(x=155, y=140)
@@ -180,7 +180,7 @@ class ChallengeInProgress(Toplevel):
     def __init__(self, parent, communicator, who):
         Toplevel.__init__(self, parent)
         self.geometry('300x200')
-        self.message=Text(text='the challenge of '+who+' is in progress')
+        self.message=Label(text='the challenge of '+who+' is in progress')
         self.message.place(x=100, y=30)
         self.decline=Button(self, text='Decline', command=communicator.cancel)
         self.decline.place(x=155, y=140)
@@ -189,7 +189,10 @@ class ChallengeInProgress(Toplevel):
 class Player(Toplevel):
     def __init__(self, parent, player, communicator):
         Toplevel.__init__(self, parent)
-        self.blabla=Text(self, text=player['name']+'\r\nMatch played: '+player['played']+'\r\nMatch won: '+player['won']+'\r\nWin percentage: '+"%.2f" % float(player['won'])/float(player['played']), height=4)
-        self.blabla.place(x=20, y=20)
+        ratio=str(player['won']*100/player['played']) if player['played']>0 else '0'
+        texxt=player['name']+'\r\nMatch played: '+str(player['played'])+'\r\nMatch won: '+str(player['won'])+'\r\nWin percentage: '+ratio+'%'
+        print(texxt)
+        self.blabla=Label(self, text=player['name']+'\r\nMatch played: '+str(player['played'])+'\r\nMatch won: '+str(player['won'])+'\r\nWin percentage: '+ratio+'%', height=8)
+        self.blabla.place(x=20, y=50)
         self.challenge=Button(self, text='Challenge', command=lambda: communicator.challenge(player))
         self.challenge.place(x=50, y=200)

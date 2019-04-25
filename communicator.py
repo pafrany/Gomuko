@@ -137,7 +137,7 @@ class Communicator(object):
 	def challenge(self, player):
 		self.game.playerbox.destroy()
 		self.lock.acquire()
-		self.pint('Kihiv\r\n')
+		self.print('Kihiv\r\n')
 		self.print(str(player[id])+'\r\n')
 		res=self.read_line()
 		if res=='busy':

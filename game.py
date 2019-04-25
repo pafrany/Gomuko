@@ -151,8 +151,8 @@ class Game_online(tk.Tk):
         '''Show a frame for the given page name'''
         frame = self.frames[page_name]
         frame.tkraise()
-    def show_player(self):
-        sself.playerbox=Player(self, self.playerdata[self.frames['Room'].p_listNodes.curselection()[0]], self.communicator)
+    def show_player(self, event):
+        self.playerbox=Player(self, self.playerdata[self.frames['Room'].p_listNodes.curselection()[0]], self.communicator)
     
 
     def login(self, usrnm, psswrd):
