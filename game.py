@@ -113,8 +113,10 @@ class Game_online(tk.Tk):
         self.playerdata=[]
         self.plist=[]
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
-
-        
+        self.myturn=False
+        self.myplayerid=1
+        self.game_runs=False
+        self.opponent=None
         self.communicator=Communicator(self)
         self.protocol("WM_DELETE_WINDOW", self.communicator.close)
         self.communicator.print('Ping\r\n')
@@ -215,6 +217,28 @@ class Game_online(tk.Tk):
         self.communicator.lock.release()
         self.frames['Login'].delete_entry()
         self.show_frame('Login')
+    def start_game(self):
+        self.game_runs=True
+        self.show_frame('Board')
+        self.communicator.threads_run=False
+        threading.Thread(target=self.communicator.in_game_comm, args=[], daemon=True).start()
+
+    def callback(self, r, c):
+        if self.myturn:
+            self.myturn=False
+            self.frames['Board'].step(r, c, self.myplayerid)
+            self.communicator.lock.acquire()
+            self.communicator.print('lepek\r\n')
+            self.communicator.print(str(r)+'\r\n')
+            self.communicator.print(str(c)+'\r\n')
+            self.communicator.lock.release()
+    def opponent_step(self, r, c):
+        self.frames['Board'].step(r, c, (self.myplayerid%2)+1)
+        self.myturn=True
+    def endGame(self, state):
+        print(state)
+
+
 
 
 

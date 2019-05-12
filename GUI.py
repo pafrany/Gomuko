@@ -7,7 +7,8 @@ COLORS={1: 'red', 2: 'blue'}
 
 class Board(Frame):
     def __init__(self, parent, game, mode):
-        Frame.__init__(self, parent, width=1000, height=700)
+        Frame.__init__(self, parent, width=1000, height=750)
+        Frame.config(self,bg="black")
         self.parent=parent
         self.game=game
         self.field_buttons = [[0 for i in range(BOARD_SIZE)] for j in range(BOARD_SIZE)]
@@ -17,18 +18,21 @@ class Board(Frame):
                 self.field_buttons[i][j] = Button(self, font=('Arial', 20), width='1', height='1', bg='powder blue',
                          command=lambda r=i, c=j: self.game.callback(r, c))
                 #self.field_buttons[i][j].grid(row=i, column=j)
-                self.field_buttons[i][j].place(x=200+40*i, y=40+40*j)
+                self.field_buttons[i][j].place(x=200+45*i, y=45+45*j,width=45, height=45)
         if mode==2:
             self.other_buttons.append(Button(self, font=('Arial', 20), width=4, text='Undo',
                          command=lambda: self.game.undo()))
             self.other_buttons[0].place(x=900, y=100)
+        if mode==0:
+            self.turn_label=Label(self, text='')
+            self.turn_label.place(x=900, y=100)
 
     def clear(self):
         for i in range(BOARD_SIZE):
             for j in range(BOARD_SIZE):
                 self.buttons[i][j].configure(text='', bg='powder blue', state='normal')
     def step(self, r, c, player):
-        self.field_buttons[r][c].configure(text=MARKS[self.game.player], disabledforeground=COLORS[self.game.player], bg='white', state=DISABLED)
+        self.field_buttons[r][c].configure(text=MARKS[player], disabledforeground=COLORS[player], bg='white', state=DISABLED)
     def undo(self, r, c):
         self.field_buttons[r][c].configure(text='', disabledforeground=COLORS[self.game.player], bg='powder blue', state='normal')
     def draw_win(self, r, c, dir):
@@ -168,30 +172,30 @@ class Challenged(Toplevel):
     def __init__(self, parent, communicator, who):
         Toplevel.__init__(self, parent)
         self.geometry('300x200')
-        self.message=Label(text=who+' has challenged you')
+        self.message=Label(self, text=who+' has challenged you')
         self.message.place(x=100, y=30)
         self.decline=Button(self, text='Decline', command=communicator.decline)
         self.decline.place(x=155, y=140)
         self.accept=Button(self, text='Accept', command=communicator.accept)
         self.accept.place(x=80, y=140)
         self.protocol("WM_DELETE_WINDOW", communicator.decline)
-        self.withdraw()
+        #self.withdraw()
 class ChallengeInProgress(Toplevel):
     def __init__(self, parent, communicator, who):
         Toplevel.__init__(self, parent)
         self.geometry('300x200')
-        self.message=Label(text='the challenge of '+who+' is in progress')
+        self.message=Label(self, text='the challenge of '+who['name']+' is in progress')
         self.message.place(x=100, y=30)
-        self.decline=Button(self, text='Decline', command=communicator.cancel)
+        self.decline=Button(self, text='Cancel', command=communicator.cancel)
         self.decline.place(x=155, y=140)
         self.protocol("WM_DELETE_WINDOW", communicator.cancel)
-        self.withdraw()
+        #self.withdraw()
 class Player(Toplevel):
     def __init__(self, parent, player, communicator):
         Toplevel.__init__(self, parent)
+        self.geometry('250x300')
         ratio=str(player['won']*100/player['played']) if player['played']>0 else '0'
         texxt=player['name']+'\r\nMatch played: '+str(player['played'])+'\r\nMatch won: '+str(player['won'])+'\r\nWin percentage: '+ratio+'%'
-        print(texxt)
         self.blabla=Label(self, text=player['name']+'\r\nMatch played: '+str(player['played'])+'\r\nMatch won: '+str(player['won'])+'\r\nWin percentage: '+ratio+'%', height=8)
         self.blabla.place(x=20, y=50)
         self.challenge=Button(self, text='Challenge', command=lambda: communicator.challenge(player))

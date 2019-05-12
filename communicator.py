@@ -4,6 +4,8 @@ import time
 from io import StringIO
 from GUI import *
 
+SLEEPTIME=1
+
 class Communicator(object):
 	def __init__(self, game):
 	    self.socket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -25,57 +27,75 @@ class Communicator(object):
 		return(a)
 	def challenge_watcher_thread(self):
 		while True:
-			time.sleep(.100)
+			time.sleep(SLEEPTIME)
 			res = "no";
 			while True:
-				time.sleep(.100)
-				if not self.challenged:
+				time.sleep(SLEEPTIME)
+				if not self.i_challenge:
 					self.lock.acquire()
+					print(str(self.game.selfdata['id'])+'acquired')
 					if not self.threads_run:
+						print('notrunrelease')
 						self.lock.release()
 						return
 					self.print('kihiv?\r\n')
 					res = self.read_line()
+					print('kihiv?')
+					print(res)
 					if not res=='no':
 						res=self.read_line()
+						print('kihivyes')
+						print(res)
 						self.lock.release()
 						break
+					print('release')
 					self.lock.release()
 			self.game.challenged_popup=Challenged(self.game, self, res)
 			name=res
 			self.challenged=True
 			res=''
 			while True:
-				time.sleep(.100)
+				time.sleep(SLEEPTIME)
 				self.lock.acquire()
 				if not self.threads_run:
 					self.lock.release()
 					return
 				if not self.challenged:
+					print('Notchallanged, release')
 					self.lock.release()
 					break
+				print('kihivMeg?')
 				self.print('kihivMeg?\r\n')
 				res=self.read_line()
+				print(res)
 				if res in (['megse', 'gone']):
 					self.challenged=False
 					self.lock.release()
 					break
 				self.lock.release()
+			print('destroy kéne')
+			print(res)
+			self.game.challenged_popup.destroy()
 			if res=='megse':
-				self.game.frames['Room'].i_listNodes.insert(END, name + 'withdrawed the challenge')
+				self.game.frames['Room'].i_listNodes.insert(END, name + ' withdrawed the challenge')
 			if res=='gone':
-				self.game.frames['Room'].i_listNodes.insert(END, name + 'disappeared :(')
+				print('This disappeared')
+				self.game.frames['Room'].i_listNodes.insert(END, name + ' disappeared :(')
 	def decline(self):
 		self.game.challenged_popup.destroy()
 		self.lock.acquire()
+		print('I said no')
 		self.print('no\r\n')
+		#res=self.read_line()
+		self.challenged=False
 		self.lock.release()
+		print('released')
 	def accept(self):
 		self.game.challenged_popup.destroy()
 		self.lock.acquire()
 		self.print('ok\r\n')
 		self.lock.release()
-		self.game.show_frame('Board')
+		self.game.start_game()
 
 				
 
@@ -133,19 +153,22 @@ class Communicator(object):
 			if plist!=self.game.plist:
 				self.game.plist=plist
 				self.game.frames['Room'].set_player_list(self.game.plist)
-			time.sleep(.100)
+			time.sleep(SLEEPTIME)
 	def challenge(self, player):
 		self.game.playerbox.destroy()
 		self.lock.acquire()
 		self.print('Kihiv\r\n')
-		self.print(str(player[id])+'\r\n')
+		print(player)
+		print(player['id'])
+		self.print(str(player['id'])+'\r\n')
 		res=self.read_line()
 		if res=='busy':
 			self.lock.release()
 			self.game.frames['Room'].i_listNodes.insert(END, player['name']+' is currently busy')
 			return
+		self.lock.release()
 		self.game.i_challenge_popup=ChallengeInProgress(self.game, self, player)
-		#kihivresszál
+		threading.Thread(target=self.i_challenge_thread, args=[player], daemon=True).start()
 	def cancel(self):
 		self.lock.acquire()
 		self.game.i_challenge_popup.destroy()
@@ -154,24 +177,28 @@ class Communicator(object):
 		self.lock.release()
 
 	def i_challenge_thread(self, player):
+		print('szál indul')
 		self.lock.acquire()
 		self.i_challenge=True
 		self.lock.release()
+		print('ide is eljut')
 		kifogas=''
 		while True:
-			time.sleep(.100)
+			time.sleep(SLEEPTIME)
 			self.lock.acquire()
 			if not self.i_challenge:
 				self.lock.release()
 				return
+			print('KihivRes')
 			self.print('kihivRes\r\n')
 			res=self.read_line()
+			print(res)
 			if res=='y':
 				self.lock.release()
 				self.i_challenge=False
 				ok=True
 				break
-			if res=='n':
+			if res=='no':
 				self.lock.release()
 				self.i_challenge=False
 				ok=False
@@ -184,10 +211,12 @@ class Communicator(object):
 				kifogas=' disappeared :('
 				break
 			self.lock.release()
+		self.game.i_challenge_popup.destroy()
 		if ok:
-			self.game.show_frame['Game']
+			self.game.start_game()
 			return
-		self.games.frames['Room'].i_listNodes.iset(END, player['name']+kifogas)
+		self.game.frames['Room'].i_listNodes.insert(END, player['name']+kifogas)
+
 
 	def get_ip(self):
 		return 'localhost'
@@ -196,6 +225,45 @@ class Communicator(object):
 		self.lock.acquire()
 		self.threads_run=False
 		self.print('logout\r\n')
+		res=self.read_line()
 		self.lock.release()
+		print(res)
 		self.game.destroy()
-
+	def in_game_comm(self):
+		self.lock.acquire()
+		self.print('init\r\n')
+		self.game.opponent=self.read_line()
+		print(self.game.opponent)
+		myturn=self.read_line()
+		print(myturn)
+		self.game.myturn=bool(myturn=='true')
+		print(self.game.myturn)
+		self.lock.release()
+		if self.game.myturn:
+			self.game.frames['Board'].turn_label.config(text='It\'s yout turn')
+		else:
+			self.game.frames['Board'].turn_label.config(text=self.game.opponent+'\'s turn')
+		while self.game.game_runs:
+			time.sleep(SLEEPTIME)
+			self.lock.acquire()
+			self.print('valamiHir?\r\n')
+			print(str(self.game.selfdata['id'])+'valamihir?')
+			res=self.read_line()
+			print(res)
+			if res=='lepett':
+				r=int(self.read_line())
+				c=int(self.read_line())
+				self.game.opponent_step(r, c)
+			elif res=='vesztettel':
+				self.game.endGame(2)
+				self.lock.release()
+				return
+			elif res=='nyertel':
+				self.game.endGame(3)
+				self.lock.release()
+				return
+			elif res=='dontetlen':
+				self.game.endGame(1)
+				self.lock.release()
+				return
+			self.lock.release()			
