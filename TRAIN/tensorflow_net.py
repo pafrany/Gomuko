@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-An implementation of the policyValueNet in Tensorflow
-Tested in Tensorflow 1.4 and 1.5
-
-@author: Xiang Zhong
+@author: KemyPeti
 """
 
 import numpy as np

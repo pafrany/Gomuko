@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-@author: Junxiao Song
+@author: KemyPeti
 """
 
 from __future__ import print_function
