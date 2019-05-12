@@ -117,18 +117,17 @@ class Game_online(tk.Tk):
         self.myplayerid=1
         self.game_runs=False
         self.opponent=None
-        self.communicator=Communicator(self)
-        self.protocol("WM_DELETE_WINDOW", self.communicator.close)
+
+        self.communicator=Communicator(self)        
         self.communicator.print('Ping\r\n')
+        resp=self.communicator.read_line()
+
         self.playerbox=None
         self.challenged_popup=None
         self.i_challenge_popup=None
-        resp=self.communicator.read_line()
-        if resp!='Pong':
-            print('valami baj van')
-        else:
-            print('kapcsolat rendben')
-
+        self.rematch_in_popup=None
+        self.rematch_out_popup=None
+        
 
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand=True)
@@ -139,15 +138,12 @@ class Game_online(tk.Tk):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
-
-            # put all of the pages in the same location;
-            # the one on the top of the stacking order
-            # will be the one that is visible.
             frame.grid(row=1, column=0, sticky="nsew")
         frame=Board(container, self, 0)
         frame.grid(row=1, column=0, sticky="nsew")
         self.frames['Board']=frame
         self.show_frame("Login")
+        self.protocol("WM_DELETE_WINDOW", self.communicator.close)
 
     def show_frame(self, page_name):
         '''Show a frame for the given page name'''
@@ -221,22 +217,58 @@ class Game_online(tk.Tk):
         self.game_runs=True
         self.show_frame('Board')
         self.communicator.threads_run=False
+        self.communicator.lock.acquire()
+        self.communicator.print('init\r\n')
+        self.opponent=self.communicator.read_line()
+        print(self.opponent)
+        myturn=self.communicator.read_line()
+        
+        print(myturn)
+        self.myturn=bool(myturn=='true')
+
+        if not self.myturn: 
+        	self.myplayerid=2
+        print(self.myturn)
+        
+        if self.myturn:
+            self.frames['Board'].turn_label.config(text='It\'s your turn')
+        else:
+            self.frames['Board'].turn_label.config(text=self.opponent+'\'s turn')
+        self.communicator.lock.release()
         threading.Thread(target=self.communicator.in_game_comm, args=[], daemon=True).start()
 
     def callback(self, r, c):
-        if self.myturn:
+        self.communicator.lock.acquire()
+        if self.myturn and self.game_runs and self.frames['Board'].field_buttons[r][c].cget('text')=='':
             self.myturn=False
             self.frames['Board'].step(r, c, self.myplayerid)
-            self.communicator.lock.acquire()
             self.communicator.print('lepek\r\n')
+            print(r)
+            print(c)
             self.communicator.print(str(r)+'\r\n')
             self.communicator.print(str(c)+'\r\n')
-            self.communicator.lock.release()
+            self.frames['Board'].turn_label.config(text=self.opponent+'\'s turn')
+        self.communicator.lock.release()
     def opponent_step(self, r, c):
         self.frames['Board'].step(r, c, (self.myplayerid%2)+1)
+        self.communicator.lock.acquire()
         self.myturn=True
+        self.communicator.lock.release()
+        self.frames['Board'].turn_label.config(text='It\'s your turn')
     def endGame(self, state):
         print(state)
+        if state==0:
+        	text=self.opponent+' left the game'
+        if state==1:
+        	text='Draw'
+        if state==2:
+        	text='You lose'
+        if state==3:
+        	text='You won'
+        self.frames['Board'].turn_label.config(text=text)
+        self.game_runs=False
+        self.frames['Board'].visszvag.configure(state='normal')
+        threading.Thread(target=self.communicator.rematch_watcher_thread, args=[self.opponent], daemon=True).start()
 
 
 

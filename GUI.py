@@ -24,13 +24,16 @@ class Board(Frame):
                          command=lambda: self.game.undo()))
             self.other_buttons[0].place(x=900, y=100)
         if mode==0:
-            self.turn_label=Label(self, text='')
+            self.turn_label=Label(self, text='', fg='white', bg='black')
             self.turn_label.place(x=900, y=100)
+            self.visszvag=Button(self, command=self.game.communicator.i_propose_rematch, text='Rematch', state=DISABLED)
+            self.visszvag.place(x=900, y=200)
+
 
     def clear(self):
         for i in range(BOARD_SIZE):
             for j in range(BOARD_SIZE):
-                self.buttons[i][j].configure(text='', bg='powder blue', state='normal')
+                self.field_buttons[i][j].configure(text='', bg='powder blue', state='normal')
     def step(self, r, c, player):
         self.field_buttons[r][c].configure(text=MARKS[player], disabledforeground=COLORS[player], bg='white', state=DISABLED)
     def undo(self, r, c):
@@ -120,19 +123,20 @@ class Room(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
-        #Játékosok listája
+        
+        self.widgets=[]
         self.p_scrollview=Frame(self, width=20, height=10)
         self.p_scrollview.place(x=10, y=200)
         self.p_listNodes = Listbox(self.p_scrollview, font=("Helvetica", 12))
         self.p_listNodes.grid(row=0, column=0)
+        self.widgets.append(self. p_listNodes)
         for i in range(20):
             self.p_listNodes.insert(END, str(i))
         self.p_scrollbar = Scrollbar(self.p_scrollview, orient="vertical")
         self.p_scrollbar.config(command=self.p_listNodes.yview)
         self.p_scrollbar.grid(row=0, column=1)
         self.p_listNodes.bind("<Double-Button-1>", controller.show_player)
-
-        #futó játékok listája, majd, esetleg, vagy nem
+        
         self.p_listNodes.config(yscrollcommand=self.p_scrollbar.set)
         self.g_scrollview=Frame(self, width=20, height=10)
         self.g_scrollview.place(x=600, y=200)
@@ -144,8 +148,10 @@ class Room(Frame):
         self.g_scrollbar.config(command=self.g_listNodes.yview)
         self.g_scrollbar.grid(row=0, column=1)
         self.g_listNodes.config(yscrollcommand=self.g_scrollbar.set)
+        
+        self.widgets.append(self.g_listNodes)
 
-        #folyamatosan frissülő inforációmorzsák, tudod, afféle napló...
+        
         self.i_scrollview=Frame(self, width=20, height=10)
         self.i_scrollview.place(x=10, y=400)
         self.i_listNodes = Listbox(self.i_scrollview, font=("Helvetica", 12))
@@ -155,10 +161,12 @@ class Room(Frame):
         self.i_scrollbar.config(command=self.i_listNodes.yview)
         self.i_scrollbar.grid(row=0, column=1)
         self.i_listNodes.config(yscrollcommand=self.g_scrollbar.set)
-
+       
+        self.widgets.append(self.i_listNodes)
 
         button = Button(self, text="Log out", width=1, height=1,
                            command=lambda: controller.logout())
+        self.widgets.append(button)
         button.place(x=30, y=50)
     def set_player_list(self,list):
         self.p_listNodes.delete(0, END)
@@ -168,6 +176,13 @@ class Room(Frame):
         self.g_listNodes.delete(0, END)
         for i in range(len(list)):
             self.g_listNodes.insert(END, list[i])
+    def disable(self):
+        for widget in self.widgets:
+            widget.configure(state=DISABLED)
+    def enable(self):
+        for widget in self. widgets:
+            widget.configure(state='normal')
+
 class Challenged(Toplevel):
     def __init__(self, parent, communicator, who):
         Toplevel.__init__(self, parent)
@@ -189,7 +204,6 @@ class ChallengeInProgress(Toplevel):
         self.decline=Button(self, text='Cancel', command=communicator.cancel)
         self.decline.place(x=155, y=140)
         self.protocol("WM_DELETE_WINDOW", communicator.cancel)
-        #self.withdraw()
 class Player(Toplevel):
     def __init__(self, parent, player, communicator):
         Toplevel.__init__(self, parent)
@@ -200,3 +214,23 @@ class Player(Toplevel):
         self.blabla.place(x=20, y=50)
         self.challenge=Button(self, text='Challenge', command=lambda: communicator.challenge(player))
         self.challenge.place(x=50, y=200)
+class RematchProposalOut(Toplevel):
+    def __init__(self, parent, communicator):
+        Toplevel.__init__(self, parent)
+        self.geometry('300x200')
+        self.message=Label(self, text='You are proposing a rematch...')
+        self.message.place(x=100, y=30)
+        self.decline=Button(self, text='Cancel', command=communicator.rematch_cancel)
+        self.decline.place(x=155, y=140)
+        self.protocol("WM_DELETE_WINDOW", communicator.rematch_cancel)
+class RematchProposalIn(Toplevel):
+    def __init__(self, parent, communicator, who):
+        Toplevel.__init__(self, parent)
+        self.geometry('300x200')
+        self.message=Label(self, text=who+' propses a rematch')
+        self.message.place(x=100, y=30)
+        self.decline=Button(self, text='Decline', command=communicator.rematch_decline)
+        self.decline.place(x=155, y=140)
+        self.accept=Button(self, text='Accept', command=communicator.rematch_accept)
+        self.accept.place(x=80, y=140)
+        self.protocol("WM_DELETE_WINDOW", communicator.rematch_decline)
