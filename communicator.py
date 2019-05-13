@@ -35,22 +35,15 @@ class Communicator(object):
 				time.sleep(SLEEPTIME)
 				if not self.i_challenge:
 					self.lock.acquire()
-					print(str(self.game.selfdata['id'])+'acquired')
 					if not self.threads_run:
-						print('notrunrelease')
 						self.lock.release()
 						return
 					self.print('kihiv?\r\n')
 					res = self.read_line()
-					print('kihiv?')
-					print(res)
 					if not res=='no':
 						res=self.read_line()
-						print('kihivyes')
-						print(res)
 						self.lock.release()
 						break
-					print('release')
 					self.lock.release()
 			self.game.challenged_popup=Challenged(self.game, self, res)
 			self.game.challenged_popup.attributes('-topmost', 'true')
@@ -65,39 +58,29 @@ class Communicator(object):
 					self.lock.release()
 					return
 				if not self.challenged:
-					print('Notchallanged, release')
 					self.lock.release()
 					break
-				print('kihivMeg?')
 				self.print('kihivMeg?\r\n')
 				res=self.read_line()
-				print(res)
 				if res in (['megse', 'gone']):
 					self.challenged=False
 					self.lock.release()
 					break
 				self.lock.release()
-			print('destroy kéne')
-			print(res)
 			self.game.frames['Room'].enable()
 			self.game.challenged_popup.destroy()
 			if res=='megse':
 				self.game.frames['Room'].i_listNodes.insert(END, name + ' withdrawed the challenge')
 			if res=='gone':
-				print('This disappeared')
 				self.game.frames['Room'].i_listNodes.insert(END, name + ' disappeared :(')
 	def decline(self):
-		print('release')
 		self.game.frames['Room'].enable()
 		self.game.challenged_popup.destroy()
-		print('released')
 		self.lock.acquire()
-		print('I said no')
 		self.print('no\r\n')
 		#res=self.read_line()
 		self.challenged=False
 		self.lock.release()
-		print('released')
 	def accept(self):
 		self.game.frames['Room'].enable()
 		self.game.challenged_popup.destroy()
@@ -168,8 +151,6 @@ class Communicator(object):
 		self.game.playerbox.destroy()
 		self.lock.acquire()
 		self.print('Kihiv\r\n')
-		print(player)
-		print(player['id'])
 		self.print(str(player['id'])+'\r\n')
 		res=self.read_line()
 		if res=='busy':
@@ -191,11 +172,6 @@ class Communicator(object):
 		self.lock.release()
 
 	def i_challenge_thread(self, player):
-		print('szál indul')
-		self.lock.acquire()
-		
-		self.lock.release()
-		print('ide is eljut')
 		kifogas=''
 		while True:
 			time.sleep(SLEEPTIME)
@@ -203,10 +179,8 @@ class Communicator(object):
 			if not self.i_challenge:
 				self.lock.release()
 				return
-			print('KihivRes')
 			self.print('kihivRes\r\n')
 			res=self.read_line()
-			print(res)
 			if res=='y':
 				self.threads_run=False
 				self.lock.release()
@@ -237,13 +211,11 @@ class Communicator(object):
 	def get_ip(self):
 		return 'localhost'
 	def close(self):
-		print('finito')
 		self.lock.acquire()
 		self.threads_run=False
 		self.print('logout\r\n')
 		res=self.read_line()
 		self.lock.release()
-		print(res)
 		self.game.frames['Room'].enable()
 		self.game.destroy()
 	def in_game_comm(self):
@@ -252,9 +224,7 @@ class Communicator(object):
 			time.sleep(SLEEPTIME)
 			self.lock.acquire()
 			self.print('valamiHir?\r\n')
-			print(str(self.game.selfdata['id'])+'valamihir?')
 			res=self.read_line()
-			print(res)
 			self.lock.release()	
 			if res=='lepett':
 				r=int(self.read_line())
@@ -269,6 +239,9 @@ class Communicator(object):
 			elif res=='dontetlen':
 				self.game.endGame(1)
 				return
+			elif res=='gone':
+				self.game.endGame(4)
+				return
 	def giveup(self, giveup):
 		self.game.give_up_popup.destroy()
 		self.game.frames['Board'].enable()
@@ -278,7 +251,7 @@ class Communicator(object):
 			self.lock.release()
 		else:
 			self.game.frames['Board'].visszvag.configure(state=DISABLED)
-	
+
 	def rematch_watcher_thread(self, who):
 		res='-'
 		while res not in ['y', 'gone'] and not self.rematch_out and self.game.on_board:
@@ -349,13 +322,11 @@ class Communicator(object):
 	def rematch_decline(self):
 		self.game.rematch_in_popup.destroy()
 		self.lock.acquire()
-		print('I said no')
 		self.print('elutasit\r\n')
 		#res=self.read_line()
 		self.rematch_in=False
 		self.lock.release()
 		self.game.frames['Board'].visszvag.configure(state='normal')
-		print('released')
 	def rematch_accept(self):
 		self.game.rematch_in_popup.destroy()
 		self.lock.acquire()

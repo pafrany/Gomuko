@@ -114,7 +114,7 @@ class Game_online(tk.Tk):
 		self.myplayerid=1
 		self.game_runs=False
 		self.opponent=None
-		self.on_boad=False
+		self.on_board=False
 		self.communicator=Communicator(self)        
 		self.communicator.print('Ping\r\n')
 		resp=self.communicator.read_line()
@@ -213,15 +213,16 @@ class Game_online(tk.Tk):
 	def out(self, button):
 		if not self.game_runs:
 			if button:
-				self.on_boad=False
+				self.on_board=False
 				self.show_frame('Room')
 				self.communicator.lock.acquire()
 				self.communicator.print('kilep\r\n')
 				self.communicator.lock.release()
+				self.communicator.threads_run=True
 				threading.Thread(target=self.communicator.data_update_thread, args=[], daemon=True).start()
 				threading.Thread(target=self.communicator.challenge_watcher_thread, args=[], daemon=True).start()
 			else:
-				self.on_boad=False
+				self.on_board=False
 				self.destroy()
 		else:
 			self.out_popup=OutPopup(self, button)
@@ -252,17 +253,11 @@ class Game_online(tk.Tk):
 		self.communicator.lock.acquire()
 		self.communicator.print('init\r\n')
 		self.opponent=self.communicator.read_line()
-		self.on_boad=True
-		print(self.opponent)
+		self.on_board=True
 		myturn=self.communicator.read_line()
-		
-		print(myturn)
 		self.myturn=bool(myturn=='true')
-
 		if not self.myturn: 
 			self.myplayerid=2
-		print(self.myturn)
-		
 		if self.myturn:
 			self.frames['Board'].turn_label.config(text='It\'s your turn')
 		else:
@@ -276,8 +271,6 @@ class Game_online(tk.Tk):
 			self.myturn=False
 			self.frames['Board'].step(r, c, self.myplayerid)
 			self.communicator.print('lepek\r\n')
-			print(r)
-			print(c)
 			self.communicator.print(str(r)+'\r\n')
 			self.communicator.print(str(c)+'\r\n')
 			self.frames['Board'].turn_label.config(text=self.opponent+'\'s turn')
@@ -293,17 +286,18 @@ class Game_online(tk.Tk):
 		self.give_up_popup.attributes('-topmost', 'true')
 		self.frames['Board'].disable()
 	def endGame(self, state):
-		print(state)
-		if state==0:
-			text=self.opponent+' left the game'
+		self.game_runs=False
 		if state==1:
 			text='Draw'
 		if state==2:
 			text='You lose'
 		if state==3:
 			text='You won'
+		if state==4:
+		    self.frames['Board'].turn_label.config('The opponent has fled')
+		    self.frames['Board'].giveup.configure(state=DISABLED)
+		    return
 		self.frames['Board'].turn_label.config(text=text)
-		self.game_runs=False
 		self.frames['Board'].visszvag.configure(state='normal')
 		self.frames['Board'].giveup.configure(state=DISABLED)
 		threading.Thread(target=self.communicator.rematch_watcher_thread, args=[self.opponent], daemon=True).start()
