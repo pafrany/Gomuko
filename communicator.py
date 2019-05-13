@@ -103,6 +103,7 @@ class Communicator(object):
 		self.game.challenged_popup.destroy()
 		self.lock.acquire()
 		self.print('ok\r\n')
+		self.threads_run=False
 		self.lock.release()
 		self.game.start_game()
 
@@ -175,6 +176,7 @@ class Communicator(object):
 			self.lock.release()
 			self.game.frames['Room'].i_listNodes.insert(END, player['name']+' is currently busy')
 			return
+		self.i_challenge=True
 		self.lock.release()
 		self.game.i_challenge_popup=ChallengeInProgress(self.game, self, player)
 		self.game.i_challenge_popup.attributes('-topmost', 'true')
@@ -191,7 +193,7 @@ class Communicator(object):
 	def i_challenge_thread(self, player):
 		print('szál indul')
 		self.lock.acquire()
-		self.i_challenge=True
+		
 		self.lock.release()
 		print('ide is eljut')
 		kifogas=''
@@ -206,6 +208,7 @@ class Communicator(object):
 			res=self.read_line()
 			print(res)
 			if res=='y':
+				self.threads_run=False
 				self.lock.release()
 				self.i_challenge=False
 				ok=True
@@ -266,7 +269,16 @@ class Communicator(object):
 			elif res=='dontetlen':
 				self.game.endGame(1)
 				return
-					
+	def giveup(self, giveup):
+		self.game.give_up_popup.destroy()
+		self.game.frames['Board'].enable()
+		if giveup:
+			self.lock.acquire()
+			self.print('felad\r\n')
+			self.lock.release()
+		else:
+			self.game.frames['Board'].visszvag.configure(state=DISABLED)
+
 	def rematch_watcher_thread(self, who):
 		res='-'
 		while res not in ['y', 'gone'] and not self.rematch_out:
@@ -280,6 +292,7 @@ class Communicator(object):
 			return
 		self.game.rematch_in_popup=RematchProposalIn(self.game, self, who)
 		self.game.rematch_in_popup.attributes('-topmost', 'true')
+		self.game.frames['Board'].visszvag.configure(state=DISABLED)
 		res='-'
 		self.rematch_in=True
 		while res!='gone' and self.rematch_in:
@@ -297,6 +310,7 @@ class Communicator(object):
 		self.rematch_out=True
 		self.lock.release()
 		self.game.rematch_out_popup=RematchProposalOut(self.game, self)
+		self.game.frames['Board'].visszvag.configure(state=DISABLED)
 		self.game.rematch_out_popup.attributes('-topmost', 'true')
 		threading.Thread(target=self.i_propose_rematch_thread, args=[], daemon=True).start()
 	def i_propose_rematch_thread(self):
@@ -320,7 +334,7 @@ class Communicator(object):
 			self.game.myturn=(self.game.myplayerid==1)
 			text='It\'s your turn' if self.game.myturn else self.game.opponent+'\'s turn'
 			self.game.frames['Board'].turn_label.config(text=text)
-			threading.Thread(target=self.in_game_comm, args=[], daemon=True)
+			threading.Thread(target=self.in_game_comm, args=[], daemon=True).start()
 			return
 		elif res=='gone':
 			kifogas=' left the game'
@@ -340,6 +354,7 @@ class Communicator(object):
 		#res=self.read_line()
 		self.rematch_in=False
 		self.lock.release()
+		self.game.frames['Board'].visszvag.configure(state='normal')
 		print('released')
 	def rematch_accept(self):
 		self.game.rematch_in_popup.destroy()
@@ -348,9 +363,9 @@ class Communicator(object):
 		self.lock.release()
 		self.game.frames['Board'].clear()
 		self.game.game_runs=True
+		self.rematch_in=False
 		self.game.myplayerid=self.game.myplayerid%2+1
-		self.game.frames['Board'].visszvag.configure(state=DISABLED)
 		self.game.myturn=(self.game.myplayerid==1)
 		text='It\'s your turn' if self.game.myturn else self.game.opponent+'\'s turn'
 		self.game.frames['Board'].turn_label.config(text=text)
-		threading.Thread(target=self.in_game_comm, args=[], daemon=True)
+		threading.Thread(target=self.in_game_comm, args=[], daemon=True).start()
