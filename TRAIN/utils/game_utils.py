@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Apr 13 08:15:06 2019
-
-@author: KemyPeti
-"""
-
 import numpy as np
 
 class position():

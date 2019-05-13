@@ -14,7 +14,7 @@ class MainMenu:
 		Label(self.root, image=self.photo1).grid(row=0, column=5)
 		self.a = Button(self.root, text="START", width=7, command=self.indito)
 		self.a.grid(row=2, column=5)
-		self.b = Button(self.root, text="online", width=7, command=self.textchanger)
+		self.b = Button(self.root, text="Online 2 player", width=7, command=self.textchanger)
 		self.b.grid(row=3, column=5)
 	def textchanger(self):
 		self.mode = (self.mode + 1) % 3

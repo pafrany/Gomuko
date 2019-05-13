@@ -4,7 +4,7 @@ import time
 from io import StringIO
 from GUI import *
 
-SLEEPTIME=1
+SLEEPTIME=.1
 
 class Communicator(object):
 	def __init__(self, game):
@@ -13,6 +13,8 @@ class Communicator(object):
 	    self.game=game
 	    self.lock=threading.RLock()
 	    self.threads_run=False
+	    self.rematch_out=False
+	    self.rematch_in=False
 	    self.challenged=False
 	    self.i_challenge=False
 	def print(self, message):
@@ -51,6 +53,8 @@ class Communicator(object):
 					print('release')
 					self.lock.release()
 			self.game.challenged_popup=Challenged(self.game, self, res)
+			self.game.challenged_popup.attributes('-topmost', 'true')
+			self.game.frames['Room'].disable()
 			name=res
 			self.challenged=True
 			res=''
@@ -75,6 +79,7 @@ class Communicator(object):
 				self.lock.release()
 			print('destroy kéne')
 			print(res)
+			self.game.frames['Room'].enable()
 			self.game.challenged_popup.destroy()
 			if res=='megse':
 				self.game.frames['Room'].i_listNodes.insert(END, name + ' withdrawed the challenge')
@@ -82,7 +87,10 @@ class Communicator(object):
 				print('This disappeared')
 				self.game.frames['Room'].i_listNodes.insert(END, name + ' disappeared :(')
 	def decline(self):
+		print('release')
+		self.game.frames['Room'].enable()
 		self.game.challenged_popup.destroy()
+		print('released')
 		self.lock.acquire()
 		print('I said no')
 		self.print('no\r\n')
@@ -91,9 +99,11 @@ class Communicator(object):
 		self.lock.release()
 		print('released')
 	def accept(self):
+		self.game.frames['Room'].enable()
 		self.game.challenged_popup.destroy()
 		self.lock.acquire()
 		self.print('ok\r\n')
+		self.threads_run=False
 		self.lock.release()
 		self.game.start_game()
 
@@ -166,11 +176,15 @@ class Communicator(object):
 			self.lock.release()
 			self.game.frames['Room'].i_listNodes.insert(END, player['name']+' is currently busy')
 			return
+		self.i_challenge=True
 		self.lock.release()
 		self.game.i_challenge_popup=ChallengeInProgress(self.game, self, player)
+		self.game.i_challenge_popup.attributes('-topmost', 'true')
+		self.game.frames['Room'].disable()
 		threading.Thread(target=self.i_challenge_thread, args=[player], daemon=True).start()
 	def cancel(self):
 		self.lock.acquire()
+		self.game.frames['Room'].enable()
 		self.game.i_challenge_popup.destroy()
 		self.print('megse\r\n')
 		self.i_challenge=False
@@ -179,7 +193,7 @@ class Communicator(object):
 	def i_challenge_thread(self, player):
 		print('szál indul')
 		self.lock.acquire()
-		self.i_challenge=True
+		
 		self.lock.release()
 		print('ide is eljut')
 		kifogas=''
@@ -194,6 +208,7 @@ class Communicator(object):
 			res=self.read_line()
 			print(res)
 			if res=='y':
+				self.threads_run=False
 				self.lock.release()
 				self.i_challenge=False
 				ok=True
@@ -211,6 +226,7 @@ class Communicator(object):
 				kifogas=' disappeared :('
 				break
 			self.lock.release()
+		self.game.frames['Room'].enable()
 		self.game.i_challenge_popup.destroy()
 		if ok:
 			self.game.start_game()
@@ -228,21 +244,10 @@ class Communicator(object):
 		res=self.read_line()
 		self.lock.release()
 		print(res)
+		self.game.frames['Room'].enable()
 		self.game.destroy()
 	def in_game_comm(self):
-		self.lock.acquire()
-		self.print('init\r\n')
-		self.game.opponent=self.read_line()
-		print(self.game.opponent)
-		myturn=self.read_line()
-		print(myturn)
-		self.game.myturn=bool(myturn=='true')
-		print(self.game.myturn)
-		self.lock.release()
-		if self.game.myturn:
-			self.game.frames['Board'].turn_label.config(text='It\'s yout turn')
-		else:
-			self.game.frames['Board'].turn_label.config(text=self.game.opponent+'\'s turn')
+		
 		while self.game.game_runs:
 			time.sleep(SLEEPTIME)
 			self.lock.acquire()
@@ -250,20 +255,117 @@ class Communicator(object):
 			print(str(self.game.selfdata['id'])+'valamihir?')
 			res=self.read_line()
 			print(res)
+			self.lock.release()	
 			if res=='lepett':
 				r=int(self.read_line())
 				c=int(self.read_line())
 				self.game.opponent_step(r, c)
 			elif res=='vesztettel':
 				self.game.endGame(2)
-				self.lock.release()
 				return
 			elif res=='nyertel':
 				self.game.endGame(3)
-				self.lock.release()
 				return
 			elif res=='dontetlen':
 				self.game.endGame(1)
-				self.lock.release()
 				return
-			self.lock.release()			
+	def giveup(self, giveup):
+		self.game.give_up_popup.destroy()
+		self.game.frames['Board'].enable()
+		if giveup:
+			self.lock.acquire()
+			self.print('felad\r\n')
+			self.lock.release()
+		else:
+			self.game.frames['Board'].visszvag.configure(state=DISABLED)
+	
+	def rematch_watcher_thread(self, who):
+		res='-'
+		while res not in ['y', 'gone'] and not self.rematch_out and self.game.on_board:
+			time.sleep(SLEEPTIME)
+			self.lock.acquire()
+			self.print('visszavago?\r\n')
+			res=self.read_line()
+			self.lock.release()
+		if res=='gone' or self.rematch_out:
+			self.game.frames['Board'].turn_label.config(text=who+' left the game')
+			return
+		self.game.rematch_in_popup=RematchProposalIn(self.game, self, who)
+		self.game.rematch_in_popup.attributes('-topmost', 'true')
+		self.game.frames['Board'].visszvag.configure(state=DISABLED)
+		res='-'
+		self.rematch_in=True
+		while res!='gone' and self.rematch_in and self.game.on_board:
+			time.sleep(SLEEPTIME)
+			self.lock.acquire()
+			self.print('kihivMeg?\r\n')
+			res=self.read_line()
+			self.lock.release()
+		if res=='gone':
+			self.game.frames['Board'].turn_label.config(text=who+' left the game')
+			self.game.rematch_in_popup.destroy()
+	def i_propose_rematch(self):
+		self.lock.acquire()
+		self.print('Visszvag\r\n')
+		self.rematch_out=True
+		self.lock.release()
+		self.game.rematch_out_popup=RematchProposalOut(self.game, self)
+		self.game.frames['Board'].visszvag.configure(state=DISABLED)
+		self.game.rematch_out_popup.attributes('-topmost', 'true')
+		threading.Thread(target=self.i_propose_rematch_thread, args=[], daemon=True).start()
+	def i_propose_rematch_thread(self):
+		res=''
+		while res not in ['y', 'no', 'gone'] and self.rematch_out and self.game.on_board:
+			time.sleep(SLEEPTIME)
+			self.lock.acquire()
+			if self.rematch_out==False:
+				self.lock.release()
+				break
+			self.print('kihivRes\r\n')
+			res=self.read_line()
+			self.lock.release()
+		self.game.rematch_out_popup.destroy()
+		self.rematch_out=False
+		if res=='y':
+			self.game.frames['Board'].clear()
+			self.game.game_runs=True
+			self.game.frames['Board'].visszvag.configure(state=DISABLED)
+			self.game.myplayerid=self.game.myplayerid%2+1
+			self.game.myturn=(self.game.myplayerid==1)
+			text='It\'s your turn' if self.game.myturn else self.game.opponent+'\'s turn'
+			self.game.frames['Board'].turn_label.config(text=text)
+			threading.Thread(target=self.in_game_comm, args=[], daemon=True).start()
+			return
+		elif res=='gone':
+			kifogas=' left the game'
+		else:
+			kifogas=' declined the proposal'
+		self.game.frames['Board'].turn_label.config(text=self.game.opponent+kifogas)
+	def rematch_cancel(self):
+		self.lock.acquire()
+		self.print('megse\r\n')
+		self.rematch_out=False
+		self.lock.release()	
+	def rematch_decline(self):
+		self.game.rematch_in_popup.destroy()
+		self.lock.acquire()
+		print('I said no')
+		self.print('elutasit\r\n')
+		#res=self.read_line()
+		self.rematch_in=False
+		self.lock.release()
+		self.game.frames['Board'].visszvag.configure(state='normal')
+		print('released')
+	def rematch_accept(self):
+		self.game.rematch_in_popup.destroy()
+		self.lock.acquire()
+		self.print('elfogad\r\n')
+		self.lock.release()
+		self.game.frames['Board'].clear()
+		self.game.game_runs=True
+		self.rematch_in=False
+		self.game.myplayerid=self.game.myplayerid%2+1
+		self.game.myturn=(self.game.myplayerid==1)
+		text='It\'s your turn' if self.game.myturn else self.game.opponent+'\'s turn'
+		self.game.frames['Board'].turn_label.config(text=text)
+		threading.Thread(target=self.in_game_comm, args=[], daemon=True).start()

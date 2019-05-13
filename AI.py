@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-@author: KemyPeti
-"""
-
 import game
 from mcts_alphaZero_play import MCTSPlayer
 from policy_value_net_play import PolicyValueNetPlay
@@ -107,7 +102,12 @@ class AI:
         self.policy_param = []
         model_pytorch = torch.load('./AI_model/best_policy.model')
         for key, val in model_pytorch.items():
-            self.policy_param.append(val.data.numpy())
+            dat = val.data.numpy()
+            if(len(dat.shape) == 4):
+                dat = np.transpose(dat, (2,3,1,0))
+            elif(len(dat.shape) == 2):
+                dat = np.transpose(dat, (1,0))
+            self.policy_param.append(dat)
         #----------------------------pytorch----------------------------------#
         
         self.best_policy = PolicyValueNetPlay(bsize,

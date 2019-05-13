@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun May 12 20:51:39 2019
-
-@author: KemyPeti
-"""
 import numpy as np
 
 class TreeNode(object):

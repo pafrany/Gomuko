@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Apr 13 08:15:06 2019
-
-@author: KemyPeti
-"""
 from __future__ import absolute_import, division, print_function
 import numpy as np
 

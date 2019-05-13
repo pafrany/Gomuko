@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-@author: KemyPeti
-"""
 
 import numpy as np
 import copy
