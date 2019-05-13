@@ -28,6 +28,7 @@ class Communicator(object):
 		a=buff.getvalue().splitlines()[0]
 		return(a)
 	def challenge_watcher_thread(self):
+		print('ELINDULT')
 		while True:
 			time.sleep(SLEEPTIME)
 			res = "no";
@@ -40,11 +41,14 @@ class Communicator(object):
 						return
 					self.print('kihiv?\r\n')
 					res = self.read_line()
+					print(res)
 					if not res=='no':
 						res=self.read_line()
 						self.lock.release()
 						break
 					self.lock.release()
+			print('BAJVAN')
+			print(res)
 			self.game.challenged_popup=Challenged(self.game, self, res)
 			self.game.challenged_popup.attributes('-topmost', 'true')
 			self.game.frames['Room'].disable()
@@ -254,12 +258,14 @@ class Communicator(object):
 
 	def rematch_watcher_thread(self, who):
 		res='-'
+		self.lock.acquire()
 		while res not in ['y', 'gone'] and not self.rematch_out and self.game.on_board:
-			time.sleep(SLEEPTIME)
-			self.lock.acquire()
 			self.print('visszavago?\r\n')
 			res=self.read_line()
 			self.lock.release()
+			time.sleep(SLEEPTIME)
+			self.lock.acquire()
+		self.lock.release()
 		if res=='gone' or self.rematch_out:
 			self.game.frames['Board'].turn_label.config(text=who+' left the game')
 			return
@@ -303,6 +309,7 @@ class Communicator(object):
 			self.game.frames['Board'].clear()
 			self.game.game_runs=True
 			self.game.frames['Board'].visszvag.configure(state=DISABLED)
+			self.game.frames['Board'].giveup.configure(state='normal')
 			self.game.myplayerid=self.game.myplayerid%2+1
 			self.game.myturn=(self.game.myplayerid==1)
 			text='It\'s your turn' if self.game.myturn else self.game.opponent+'\'s turn'
@@ -335,6 +342,7 @@ class Communicator(object):
 		self.game.frames['Board'].clear()
 		self.game.game_runs=True
 		self.rematch_in=False
+		self.game.frames['Board'].giveup.configure(state='normal')
 		self.game.myplayerid=self.game.myplayerid%2+1
 		self.game.myturn=(self.game.myplayerid==1)
 		text='It\'s your turn' if self.game.myturn else self.game.opponent+'\'s turn'

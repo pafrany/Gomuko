@@ -60,7 +60,7 @@ class Board(Frame):
 			i, j=i-dir[0], j-dir[1]
 			if any(x in set([i, j]) for x in [-1, BOARD_SIZE]):
 				break
-			if self.gamestates[i][j]!=self.game.states[r][c]:
+			if self.game.states[i][j]!=self.game.states[r][c]:
 				break
 			self.field_buttons[i][j].configure(bg='DarkOrange3')
 	def disable(self):

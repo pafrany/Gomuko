@@ -168,6 +168,7 @@ class Game_online(tk.Tk):
 			return
 		self.communicator.print(psswrd+'\r\n')
 		resp=self.communicator.read_line()
+		print(resp)
 		if resp!='ok':
 			self.frames['Login'].psswrdfail.configure(text='Incorrect password')
 			self.communicator.lock.release()
@@ -293,7 +294,7 @@ class Game_online(tk.Tk):
 		if state==3:
 			text='You won'
 		if state==4:
-		    self.frames['Board'].turn_label.config(text='The opponent has fled')
+		    self.frames['Board'].turn_label.config('The opponent has fled')
 		    self.frames['Board'].giveup.configure(state=DISABLED)
 		    return
 		self.frames['Board'].turn_label.config(text=text)
