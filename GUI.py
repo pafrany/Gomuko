@@ -26,12 +26,15 @@ class Board(Frame):
 		if mode==0:
 			self.turn_label=Label(self, text='', fg='white', bg='black')
 			self.turn_label.place(x=900, y=100)
-			self.visszvag=Button(self, command=self.game.communicator.i_propose_rematch, text='Rematch', state=DISABLED)
+			self.visszvag=Button(self, command=self.game.communicator.i_propose_rematch, text='Rematch', state=DISABLED, width=3)
 			self.visszvag.place(x=900, y=200)
 			self.other_buttons.append(self.visszvag)
-			self.giveup=Button(self, command=self.game.giveup, text='Give up', state='normal')
+			self.giveup=Button(self, command=self.game.giveup, text='Give up', state='normal', width=3)
 			self.giveup.place(x=900, y=250)
 			self.other_buttons.append(self.giveup)
+			self.out=Button(self, command=lambda: self.game.out(True), text='Exit to room', width=3)
+			self.out.place(x=900, y=300)
+			self.other_buttons.append(self.out)
 
 
 	def clear(self):
@@ -168,7 +171,7 @@ class Room(Frame):
 		self.i_listNodes.config(yscrollcommand=self.g_scrollbar.set)
 		self.widgets.append(self.i_listNodes)
 
-		button = Button(self, text="Log out", width=2, height=1,
+		button = Button(self, text="Log out", width=3, height=1,
 						   command=lambda: controller.logout())
 		self.widgets.append(button)
 		button.place(x=30, y=50)
@@ -247,4 +250,14 @@ class GiveUpPopup(Toplevel):
 		self.decline=Button(self, text='Yes', command=lambda: communicator.giveup(True))
 		self.decline.place(x=155, y=140)
 		self.accept=Button(self, text='cancel', command=lambda: communicator.giveup(False))
+		self.accept.place(x=80, y=140)
+class OutPopup(Toplevel):
+	def __init__(self, parent, button):
+		Toplevel.__init__(self, parent)
+		self.geometry('300x200')
+		self.message=Label(self, text='Do you want to leave the match? This will be considered as a lose.')
+		self.message.place(x=100, y=30)
+		self.decline=Button(self, text='Yes', command=lambda: parent.out_resp(True, button))
+		self.decline.place(x=155, y=140)
+		self.accept=Button(self, text='cancel', command=lambda: parent.out_resp(False, button))
 		self.accept.place(x=80, y=140)

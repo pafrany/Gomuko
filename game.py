@@ -114,7 +114,7 @@ class Game_online(tk.Tk):
 		self.myplayerid=1
 		self.game_runs=False
 		self.opponent=None
-
+		self.on_boad=False
 		self.communicator=Communicator(self)        
 		self.communicator.print('Ping\r\n')
 		resp=self.communicator.read_line()
@@ -210,12 +210,49 @@ class Game_online(tk.Tk):
 		self.communicator.lock.release()
 		self.frames['Login'].delete_entry()
 		self.show_frame('Login')
+	def out(self, button):
+		if not self.game_runs:
+			if button:
+				self.on_boad=False
+				self.show_frame('Room')
+				self.communicator.lock.acquire()
+				self.communicator.print('kilep\r\n')
+				self.communicator.lock.release()
+				threading.Thread(target=self.communicator.data_update_thread, args=[], daemon=True).start()
+				threading.Thread(target=self.communicator.challenge_watcher_thread, args=[], daemon=True).start()
+			else:
+				self.on_boad=False
+				self.destroy()
+		else:
+			self.out_popup=OutPopup(self, button)
+			self.out_popup.attributes('-topmost', 'true')
+			self.frames['Board'].disable()
+
+				
+	def out_resp(self, decision, button):
+		self.out_popup.destroy()
+		if not decision:
+			self.frames['Board'].enable()
+			self.frames['Board'].visszvag.configure(state=DISABLED)
+		else:
+			self.communicator.lock.acquire()
+			self.communicator.print('dezert\r\n')
+			self.communicator.lock.release()
+			self.on_board=False
+			if button:
+				self.show_frame('Room')
+				threading.Thread(target=self.communicator.data_update_thread, args=[], daemon=True).start()
+				threading.Thread(target=self.communicator.challenge_watcher_thread, args=[], daemon=True).start()
+			else:
+				self.destroy()
+
 	def start_game(self):
 		self.game_runs=True
 		self.show_frame('Board')
 		self.communicator.lock.acquire()
 		self.communicator.print('init\r\n')
 		self.opponent=self.communicator.read_line()
+		self.on_boad=True
 		print(self.opponent)
 		myturn=self.communicator.read_line()
 		

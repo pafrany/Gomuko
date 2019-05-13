@@ -278,10 +278,10 @@ class Communicator(object):
 			self.lock.release()
 		else:
 			self.game.frames['Board'].visszvag.configure(state=DISABLED)
-
+	
 	def rematch_watcher_thread(self, who):
 		res='-'
-		while res not in ['y', 'gone'] and not self.rematch_out:
+		while res not in ['y', 'gone'] and not self.rematch_out and self.game.on_board:
 			time.sleep(SLEEPTIME)
 			self.lock.acquire()
 			self.print('visszavago?\r\n')
@@ -295,7 +295,7 @@ class Communicator(object):
 		self.game.frames['Board'].visszvag.configure(state=DISABLED)
 		res='-'
 		self.rematch_in=True
-		while res!='gone' and self.rematch_in:
+		while res!='gone' and self.rematch_in and self.game.on_board:
 			time.sleep(SLEEPTIME)
 			self.lock.acquire()
 			self.print('kihivMeg?\r\n')
@@ -315,7 +315,7 @@ class Communicator(object):
 		threading.Thread(target=self.i_propose_rematch_thread, args=[], daemon=True).start()
 	def i_propose_rematch_thread(self):
 		res=''
-		while res not in ['y', 'no', 'gone'] and self.rematch_out:
+		while res not in ['y', 'no', 'gone'] and self.rematch_out and self.game.on_board:
 			time.sleep(SLEEPTIME)
 			self.lock.acquire()
 			if self.rematch_out==False:
