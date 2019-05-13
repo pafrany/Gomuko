@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-@author: KemyPeti
-"""
 
 from __future__ import print_function
+import sys
 import pickle
 from game import Board, Game
+sys.path.append('.\\TRAIN\\')
 from mcts_alphaZero import MCTSPlayer
 from policy_value_net_play import PolicyValueNetPlay
 

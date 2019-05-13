@@ -1,8 +1,4 @@
-from __future__ import absolute_import, division, print_function
 import numpy as np
-
-
-import tensorflow as tf
 
 class position():
     
@@ -11,12 +7,6 @@ class position():
         """
         Ex:
         IDX_to_position(10,10,11) -> [1,1]
-        
-        3*3 board's moves like:
-        6 7 8
-        3 4 5
-        0 1 2
-        and move 5's location is (1,2)
         """
         h = IDX // width
         w = IDX % width
@@ -46,17 +36,16 @@ class math():
     
     @staticmethod
     def relu(X):
-        return np.maximum(X, 0)
-    
+        out = np.maximum(X, 0)
+        return out
     
     @staticmethod
     def dense(X, W, b):
-        out = np.dot(X, W) + b 
+        out = np.dot(X, W) + b
         return out
     
     @staticmethod
     def conv2D(X, W, b, stride=1, padding=1):
-        W = np.transpose(W,(3,2,0,1))
         n_filters, d_filter, h_filter, w_filter = W.shape
         
         W = W[:, :, ::-1, ::-1] #x(t)*h(t-theta) 
@@ -72,7 +61,7 @@ class math():
         out = out.reshape(n_filters, h_out, w_out, n_x)
         out = out.transpose(3, 0, 1, 2)
         return math.relu(out)
-
+    
     @staticmethod
     def get_im2col_indices(x_shape, field_height,
                            field_width, padding=1, stride=1):
@@ -97,8 +86,6 @@ class math():
 
     @staticmethod
     def im2col_indices(x, field_height, field_width, padding=1, stride=1):
-        """ An implementation of im2col based on some fancy indexing """
-        # Zero-pad the input
         p = padding
         x_padded = np.pad(x, ((0, 0), (0, 0), (p, p), (p, p)), mode='constant')
     
@@ -109,3 +96,4 @@ class math():
         C = x.shape[1]
         cols = cols.transpose(1, 2, 0).reshape(field_height * field_width * C, -1)
         return cols
+        

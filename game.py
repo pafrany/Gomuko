@@ -1,4 +1,7 @@
+<<<<<<< HEAD
+=======
 
+>>>>>>> 2bd67f714635bf2055426e9097c21cc88039ebb7
 
 from __future__ import print_function
 import sys

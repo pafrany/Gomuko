@@ -6,6 +6,7 @@ import utils.game_utils as GU
 import pickle
 import numpy as np
 import tensorflow as tf
+import torch
 bsize = 15#game.BOARD_SIZE
 
 
@@ -81,7 +82,9 @@ class AI:
         
         self.BoardState = BState()
         
-        self.model_file = './AI_model/9_9_5_best_policy.model.meta'
+        #---------------------------tensorflow--------------------------------#
+        '''
+        self.model_file = './AI_model/best_policy.model.meta'
         
         sess=tf.Session()    
         #First let's load meta graph and restore weights
@@ -93,7 +96,20 @@ class AI:
         self.policy_param = []
         for idx in range(16):
             self.policy_param.append(graph.get_tensor_by_name(variables[idx] + ':0').eval(session=sess))
-
+        '''
+        #---------------------------tensorflow--------------------------------#
+        #----------------------------pytorch----------------------------------#
+        self.policy_param = []
+        model_pytorch = torch.load('./AI_model/best_policy.model')
+        for key, val in model_pytorch.items():
+            dat = val.data.numpy()
+            if(len(dat.shape) == 4):
+                dat = np.transpose(dat, (2,3,1,0))
+            elif(len(dat.shape) == 2):
+                dat = np.transpose(dat, (1,0))
+            self.policy_param.append(dat)
+        #----------------------------pytorch----------------------------------#
+        
         self.best_policy = PolicyValueNetPlay(bsize,
                                               bsize,
                                               self.policy_param)
@@ -122,5 +138,3 @@ class AI:
         self.BoardState.availables.append(IDX)
         self.BoardState.availables=sorted(self.BoardState.availables)
         self.BoardState.states.pop(IDX);
-
-
