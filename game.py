@@ -157,7 +157,6 @@ class Game_online(tk.Tk):
 		self.communicator.print('login\r\n')
 		self.communicator.print(usrnm+'\r\n')
 		resp=self.communicator.read_line()
-		print(resp)
 		if resp=='nincs':
 			self.frames['Login'].usrnmfail.configure(text='There is no user with this name')
 			self.communicator.lock.release()
@@ -202,7 +201,6 @@ class Game_online(tk.Tk):
 		self.show_frame('Login')
 		self.communicator.lock.release()
 	def logout(self):
-		print(self.frames['Room'].p_listNodes.curselection())
 		self.playerbox=Player(self, self.playerdata[self.frames['Room'].p_listNodes.curselection()[0]], self.communicator)
 		self.communicator.lock.acquire()
 		self.communicator.print('logout\r\n')

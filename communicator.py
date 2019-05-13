@@ -28,7 +28,6 @@ class Communicator(object):
 		a=buff.getvalue().splitlines()[0]
 		return(a)
 	def challenge_watcher_thread(self):
-		print('ELINDULT')
 		while True:
 			time.sleep(SLEEPTIME)
 			res = "no";
@@ -41,14 +40,11 @@ class Communicator(object):
 						return
 					self.print('kihiv?\r\n')
 					res = self.read_line()
-					print(res)
 					if not res=='no':
 						res=self.read_line()
 						self.lock.release()
 						break
 					self.lock.release()
-			print('BAJVAN')
-			print(res)
 			self.game.challenged_popup=Challenged(self.game, self, res)
 			self.game.challenged_popup.attributes('-topmost', 'true')
 			self.game.frames['Room'].disable()
