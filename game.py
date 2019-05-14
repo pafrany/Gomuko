@@ -140,7 +140,7 @@ class Game_online(tk.Tk):
 		frame.grid(row=1, column=0, sticky="nsew")
 		self.frames['Board']=frame
 		self.show_frame("Login")
-		self.protocol("WM_DELETE_WINDOW", self.communicator.close)
+		
 
 	def show_frame(self, page_name):
 		'''Show a frame for the given page name'''
@@ -176,6 +176,7 @@ class Game_online(tk.Tk):
 		threading.Thread(target=self.communicator.data_update_thread, args=[], daemon=True).start()
 		threading.Thread(target=self.communicator.challenge_watcher_thread, args=[], daemon=True).start()
 		self.show_frame('Room')
+		self.protocol("WM_DELETE_WINDOW", self.communicator.close)
 
 	def reg(self, usrnm, psswrd, psswrd2):
 		self.frames['Register'].del_error()

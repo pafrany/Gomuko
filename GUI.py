@@ -20,7 +20,7 @@ class Board(Frame):
                 self.field_buttons[i][j] = Button(self, font=('Arial', 20), width='1', height='1', bg='powder blue',
                                                   command=lambda r=i, c=j: self.game.callback(r, c))
                 # self.field_buttons[i][j].grid(row=i, column=j)
-                self.field_buttons[i][j].place(x=200 + 45 * i, y=45 + 45 * j, width=45, height=45)
+                self.field_buttons[i][j].place(x=200 + 40 * i, y=45 + 40 * j)
         if mode == 2:
             self.other_buttons.append(Button(self, font=('Arial', 20), width=4, text='Undo',
                                              command=lambda: self.game.undo()))
@@ -85,7 +85,6 @@ class Login(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self, parent, width=1000, height=700)
         # self.controller = controller
-        Frame.config(self, bg="green4")
         button0 = Button(self, height=20, width=25)
         button0.place(x=380, y=180)
         self.usrnm = Entry(self, width=20)

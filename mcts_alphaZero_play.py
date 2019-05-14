@@ -73,6 +73,7 @@ class MCTS(object):
             boardstate.availables.remove(action)
             boardstate.current_player = (1 if boardstate.current_player == 2 else 2)
             ##
+
         # Evaluate the leaf using a network which outputs a list of
         # (action, probability) tuples p and also a score v in [-1, 1]
         # for the current player.
@@ -86,7 +87,7 @@ class MCTS(object):
             if winner == -1:  # tie
                 leaf_value = 0.0
             else:
-                leaf_value = (1.0 if winner == boardstate.current_player() else -1.0)
+                leaf_value = (1.0 if winner == boardstate.current_player else -1.0)
 
         # Update value and visit count of nodes in this traversal.
         node.update_recursive(-leaf_value)
