@@ -216,6 +216,7 @@ class Game_online(tk.Tk):
 				self.communicator.print('kilep\r\n')
 				self.communicator.lock.release()
 				self.communicator.threads_run=True
+				self.protocol("WM_DELETE_WINDOW", self.communicator.close)
 				threading.Thread(target=self.communicator.data_update_thread, args=[], daemon=True).start()
 				threading.Thread(target=self.communicator.challenge_watcher_thread, args=[], daemon=True).start()
 			else:
@@ -239,6 +240,7 @@ class Game_online(tk.Tk):
 			self.on_board=False
 			if button:
 				self.show_frame('Room')
+				self.protocol("WM_DELETE_WINDOW", self.communicator.close)
 				threading.Thread(target=self.communicator.data_update_thread, args=[], daemon=True).start()
 				threading.Thread(target=self.communicator.challenge_watcher_thread, args=[], daemon=True).start()
 			else:
@@ -260,6 +262,7 @@ class Game_online(tk.Tk):
 		else:
 			self.frames['Board'].turn_label.config(text=self.opponent+'\'s turn')
 		self.communicator.lock.release()
+		self.protocol("WM_DELETE_WINDOW", lambda: self.out(False))
 		threading.Thread(target=self.communicator.in_game_comm, args=[], daemon=True).start()
 
 	def callback(self, r, c):
